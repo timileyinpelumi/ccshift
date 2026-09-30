@@ -1,0 +1,26 @@
+name: install
+
+# Runs the published installers against the latest release on each system.
+on:
+  workflow_dispatch:
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - if: runner.os != 'Windows'
+        run: |
+          curl -fsSL https://www.timileyin.dev/ccshift/install.sh | CCSHIFT_INSTALL_DIR="$RUNNER_TEMP/bin" sh
+          "$RUNNER_TEMP/bin/ccshift" version
+          "$RUNNER_TEMP/bin/ccshift" ls
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $env:CCSHIFT_INSTALL_DIR = Join-Path $env:RUNNER_TEMP 'bin'
+          irm https://www.timileyin.dev/ccshift/install.ps1 | iex
+          & (Join-Path $env:CCSHIFT_INSTALL_DIR 'ccshift.exe') version
+          & (Join-Path $env:CCSHIFT_INSTALL_DIR 'ccshift.exe') ls

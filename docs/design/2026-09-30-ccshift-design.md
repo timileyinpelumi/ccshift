@@ -13,6 +13,18 @@ ccshift is a CLI for people who keep several Claude Code sessions open in termin
 
 Around those: a session list with status and context usage, a context-usage warning, focusing a session's tab, and named workspaces.
 
+## Systems
+
+Linux, macOS and Windows. What differs per system is kept in a few places:
+
+- **Process information** (`internal/proc`). Linux reads `/proc`. macOS asks `ps`. Windows uses the process snapshot API and cannot read another process's environment.
+- **Which tab a session is in.** Each session's own hook records the terminal variables it runs with (`session-env.json`), because reading another process's environment is not possible on Windows. Reading the process directly is the fallback for sessions that started before the hooks were installed. Terminal.app has no per-tab variable, so there the session's tty is recorded and matched against the tty each tab reports.
+- **Launch isolation.** Unix prefixes launches with `env -u …`. Windows has no such tool, so launches go through `ccshift exec -- …`, which starts with the variables already cleared.
+- **Locking, detaching, notifications, paths.** `flock` or `LockFileEx`; `setsid` or a detached process; `notify-send`, `osascript` or a PowerShell toast; XDG directories on Linux and macOS, `%AppData%` and `%LocalAppData%` on Windows.
+- **Terminals.** macOS adds iTerm2 and Terminal.app, driven by AppleScript, and starts Ghostty and Alacritty with `open`. Windows adds Windows Terminal through `wt.exe`, which can open tabs but not report their order.
+
+macOS and Windows are experimental. CI runs the unit tests on all three systems, an end-to-end tmux restore, `ls`, `rename` and `focus` on Linux and macOS (`scripts/e2e.sh`), and a smoke test of `init`, the hook, the statusline and `exec` on Windows. The AppleScript adapters and Windows Terminal were written from documentation and have not been run on a real machine.
+
 ## Why it's needed
 
 Checked on 2026-09-30:
@@ -40,7 +52,6 @@ Not in v1:
 
 - `find` (search past transcripts and resume the match). Planned for v1.1.
 - Codex CLI, Gemini CLI, opencode. The `claude` package is kept separate so another agent can be added next to it.
-- macOS and Windows.
 - A TUI. Everything is plain CLI output, with `--json` where it makes sense.
 - Restoring background (`--bg`) sessions. `restore` lists them and points to `claude respawn`.
 

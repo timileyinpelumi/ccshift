@@ -4,15 +4,20 @@ Save the Claude Code sessions you have open in your terminal, in tab order, and 
 
 Site: https://www.timileyin.dev/ccshift
 
-Linux only for now.
+Runs on Linux, macOS and Windows. Linux is where it was built and checked on real terminals. macOS and Windows are experimental: they pass the automated tests on GitHub's Mac and Windows machines, including a real tmux restore on macOS, but iTerm2, Terminal.app and Windows Terminal have not been run by a person yet. Reports are welcome.
 
-| Terminal | Restore | Tab order | Tab titles and focus |
-|---|---|---|---|
-| tmux, kitty, WezTerm, zellij 0.44+, Konsole | tabs in one window | read from the terminal | yes |
-| GNOME Terminal, Ptyxis, Tilix, Xfce Terminal | tabs in one window | kept from the last restore | no |
-| Alacritty, foot, Ghostty | one window per session | kept from the last restore | no |
+| Terminal | System | Restore | Tab order | Tab titles and focus |
+|---|---|---|---|---|
+| tmux, kitty, WezTerm, zellij 0.44+ | Linux, macOS | tabs in one window | read from the terminal | yes |
+| Konsole | Linux | tabs in one window | read from the terminal | yes |
+| iTerm2 | macOS | tabs in one window | read from the terminal | yes |
+| Terminal.app | macOS | one window per session | read from the terminal | yes |
+| WezTerm | Windows | tabs in one window | read from the terminal | yes |
+| Windows Terminal | Windows | tabs in one window | kept from the last restore | no |
+| GNOME Terminal, Ptyxis, Tilix, Xfce Terminal | Linux | tabs in one window | kept from the last restore | no |
+| Alacritty, foot, Ghostty | Linux, macOS | one window per session | kept from the last restore | no |
 
-All of these have been run for real except Ghostty. Konsole needs `qdbus` for tab order.
+On Linux all of these have been run for real except Ghostty. Konsole needs `qdbus` for tab order. Under WSL, ccshift is the Linux version.
 
 ## Install
 
@@ -20,7 +25,15 @@ All of these have been run for real except Ghostty. Konsole needs `qdbus` for ta
 curl -fsSL https://www.timileyin.dev/ccshift/install.sh | sh
 ```
 
-This downloads the latest release for your machine (x86_64 or arm64), checks it against the published checksum, and puts `ccshift` in `~/.local/bin`. Set `CCSHIFT_INSTALL_DIR` to install somewhere else.
+Linux and macOS. This downloads the latest release for your machine (x86_64 or arm64), checks it against the published checksum, and puts `ccshift` in `~/.local/bin`. Set `CCSHIFT_INSTALL_DIR` to install somewhere else.
+
+Windows, in PowerShell:
+
+```
+irm https://www.timileyin.dev/ccshift/install.ps1 | iex
+```
+
+This puts `ccshift.exe` in `%LOCALAPPDATA%\Programs\ccshift` and adds that folder to your PATH.
 
 Debian and Ubuntu:
 
