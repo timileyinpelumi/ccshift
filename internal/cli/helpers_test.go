@@ -146,6 +146,7 @@ func testApp(t *testing.T, tier term.Tier) *harness {
 		RunClaude:  func(context.Context, string, []string, string) (string, error) { return "brief\n", nil },
 		GitSummary: func(context.Context, string) string { return "" },
 		Cwd:        "/p/new",
+		Chdir:      func(string) error { return nil },
 		DirExists:  func(string) bool { return true },
 		ClaudeBin:  "/bin/claude",
 		Now:        func() time.Time { return testNow },

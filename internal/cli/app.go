@@ -56,6 +56,7 @@ type App struct {
 	ConfigPath   string
 	Releases     releases
 	Interactive  func() bool
+	Chdir        func(dir string) error
 	Executable   string
 	HasCommand   func(name string) bool
 	Notify       func(title, body string)
@@ -94,7 +95,7 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Interactive: stdoutIsTerminal,
+		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Interactive: stdoutIsTerminal, Chdir: os.Chdir,
 		Releases: update.Releases{Base: update.DefaultBase, OS: runtime.GOOS, Arch: runtime.GOARCH}, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}
@@ -124,6 +125,7 @@ func (a *App) commands() []command {
 		{"new", "start a named Claude session in this tab", (*App).cmdNew},
 		{"ls", "list running Claude sessions in tab order", (*App).cmdLs},
 		{"rename", "give a session a name", (*App).cmdRename},
+		{"find", "search past sessions and resume one", (*App).cmdFind},
 		{"handoff", "continue a session in a fresh one, from a written brief", (*App).cmdHandoff},
 		{"save", "save the open sessions of each workspace", (*App).cmdSave},
 		{"restore", "reopen saved sessions in the current terminal", (*App).cmdRestore},
