@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -44,6 +45,9 @@ type Launch struct {
 	Title string
 	Argv  []string
 }
+
+// goos is the operating system, replaceable in tests.
+var goos = runtime.GOOS
 
 var ErrUnsupported = errors.New("not supported by this terminal")
 
@@ -155,7 +159,8 @@ func sameInstance(own, other map[string]string, key string) bool {
 }
 
 func All(x Exec) []Adapter {
-	as := []Adapter{&zellij{x: x}, &tmux{x: x}, &kitty{x: x}, &wezterm{x: x}, &konsole{x: x}}
+	as := []Adapter{&zellij{x: x}, &tmux{x: x}, &kitty{x: x}, &wezterm{x: x}, &konsole{x: x},
+		&iterm{x: x}, &appleTerminal{x: x}, &windowsTerminal{x: x}}
 	as = append(as, launchOnlyAdapters(x)...)
 	return append(as, &generic{x: x})
 }

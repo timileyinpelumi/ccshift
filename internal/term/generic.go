@@ -18,6 +18,15 @@ func (g *generic) SetTitle(context.Context, TabID, string) error { return ErrUns
 func (g *generic) Focus(context.Context, TabID) error            { return ErrUnsupported }
 
 func (g *generic) OpenWindow(_ context.Context, title string, ls []Launch) error {
+	if goos == "windows" {
+		// start opens a console window; its first quoted argument is the window title.
+		for _, l := range ls {
+			if err := g.x.Spawn("cmd", append([]string{"/c", "start", l.Title, "/D", l.CWD}, l.Argv...)...); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	term := ""
 	if g.x.Env["DISPLAY"] != "" || g.x.Env["WAYLAND_DISPLAY"] != "" {
 		term = g.x.Env["TERMINAL"]

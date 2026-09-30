@@ -121,13 +121,13 @@ func launchOnlyAdapters(x Exec) []Adapter {
 				}
 				return append(args, "--working-directory="+l.CWD, "--command="+ShellJoin(l.Argv))
 			}},
-		&launchOnly{name: "ghostty", tier: WindowsOnly, procs: []string{"ghostty"}, x: x,
+		&launchOnly{name: "ghostty", tier: WindowsOnly, envKey: "GHOSTTY_RESOURCES_DIR", procs: []string{"ghostty"}, x: x,
 			open: func(_ int, l Launch) []string {
-				return append([]string{"ghostty", "--working-directory=" + l.CWD, "--title=" + l.Title, "-e"}, l.Argv...)
+				return append(macApp("Ghostty", "ghostty", "--working-directory="+l.CWD, "--title="+l.Title, "-e"), l.Argv...)
 			}},
 		&launchOnly{name: "alacritty", tier: WindowsOnly, envKey: "ALACRITTY_WINDOW_ID", procs: []string{"alacritty"}, x: x,
 			open: func(_ int, l Launch) []string {
-				return append([]string{"alacritty", "--working-directory=" + l.CWD, "--title=" + l.Title, "-e"}, l.Argv...)
+				return append(macApp("Alacritty", "alacritty", "--working-directory="+l.CWD, "--title="+l.Title, "-e"), l.Argv...)
 			}},
 		&launchOnly{name: "foot", tier: WindowsOnly, procs: []string{"foot"}, x: x,
 			open: func(_ int, l Launch) []string {
@@ -147,4 +147,13 @@ func cacheFile(name, content string) (string, error) {
 		return "", err
 	}
 	return path, os.WriteFile(path, []byte(content), 0o600)
+}
+
+// macApp starts a terminal that is installed as an application on macOS, where its command is
+// usually not on PATH. "open -n" starts a new instance and passes on what follows --args.
+func macApp(app, command string, args ...string) []string {
+	if goos == "darwin" {
+		return append([]string{"open", "-na", app, "--args"}, args...)
+	}
+	return append([]string{command}, args...)
 }
