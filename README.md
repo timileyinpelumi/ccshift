@@ -246,11 +246,9 @@ The design is written up in [docs/design](docs/design/2026-09-30-ccshift-design.
 
 | System | Status |
 |---|---|
-| Linux | Stable. Every listed terminal except Ghostty has been run for real. |
-| macOS | Beta. Automated tests pass, including a real tmux restore. iTerm2 and Terminal have not been run on a Mac yet. |
-| Windows | Beta. Automated tests pass. Windows Terminal has not been run on a PC yet. |
-
-If you use ccshift on macOS or Windows, an [issue](https://github.com/timileyinpelumi/ccshift/issues) saying what worked and what did not is very useful.
+| Linux | Stable |
+| macOS | Beta |
+| Windows | Beta |
 
 ## Uninstall
 
