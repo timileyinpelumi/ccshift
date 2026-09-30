@@ -158,9 +158,9 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	launch := term.Launch{CWD: src.cwd, Title: newName, Argv: append(argv, "Read "+briefPath+" and continue from it.")}
 	opener, canPlace := v.adapter.(term.TabOpener)
 	if canPlace && src.matched {
-		err = opener.OpenTab(ctx, src.tab, isolated([]term.Launch{launch})[0])
+		err = opener.OpenTab(ctx, src.tab, a.isolated([]term.Launch{launch})[0])
 	} else {
-		err = v.adapter.OpenWindow(ctx, src.workspace, isolated([]term.Launch{launch}))
+		err = v.adapter.OpenWindow(ctx, src.workspace, a.isolated([]term.Launch{launch}))
 	}
 	if errors.Is(err, term.ErrPrinted) {
 		// Nothing is running yet, so the save is left alone; autosave picks the new session up once it starts.

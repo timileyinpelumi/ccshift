@@ -27,7 +27,7 @@ var hookEvents = []struct{ event, arg string }{
 }
 
 // Matches a command ccshift installed, whatever path the binary had at the time.
-var ours = regexp.MustCompile(`ccshift'? (hook (session-start|stop|session-end)|statusline)$`)
+var ours = regexp.MustCompile(`ccshift(\.exe)?['"]? (hook (session-start|stop|session-end)|statusline)$`)
 
 // ours reports whether ccshift installed a command: by shape, or exactly what it would install now
 // (which also covers a binary that is not named ccshift).
@@ -315,7 +315,7 @@ func (a *App) cmdDoctor(ctx context.Context, args []string) error {
 		report(cerr == nil, fmt.Sprintf("terminal is %s (%s)", ad.Name(), tierNote(ad.Tier())), fmt.Sprint(cerr))
 	}
 
-	report(a.HasCommand("notify-send"), "notify-send is available for the context warning", "install libnotify-bin, or the warning only shows in ccshift ls")
+	report(a.HasCommand(notifier()), notifier()+" is available for the context warning", "without it the warning only shows in ccshift ls")
 
 	if problems > 0 {
 		return fmt.Errorf("%d problems found", problems)

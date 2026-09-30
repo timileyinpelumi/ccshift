@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"syscall"
 	"time"
 )
 
@@ -114,7 +113,7 @@ func run(ctx context.Context, name string, args ...string) ([]byte, error) {
 // spawn starts a terminal in its own session so it outlives ccshift.
 func spawn(name string, args ...string) error {
 	cmd := exec.Command(name, args...)
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	detach(cmd)
 	if err := cmd.Start(); err != nil {
 		return err
 	}
@@ -131,6 +130,23 @@ func spawn(name string, args ...string) error {
 		return nil
 	}
 }
+
+// EnvKeys are the environment variables terminals set that say which terminal, window and tab a
+// process is in. ccshift's hooks record them per session, because not every operating system
+// lets one process read another's environment. TTYKey is added by ccshift itself.
+var EnvKeys = []string{
+	"TMUX", "TMUX_PANE",
+	"KITTY_WINDOW_ID", "KITTY_PID", "KITTY_LISTEN_ON",
+	"WEZTERM_PANE", "WEZTERM_UNIX_SOCKET",
+	"ZELLIJ", "ZELLIJ_PANE_ID", "ZELLIJ_SESSION_NAME",
+	"KONSOLE_DBUS_SERVICE", "KONSOLE_DBUS_SESSION", "KONSOLE_DBUS_WINDOW", "KONSOLE_VERSION",
+	"GNOME_TERMINAL_SCREEN", "ALACRITTY_WINDOW_ID",
+	"TERM_PROGRAM", "ITERM_SESSION_ID", "TERM_SESSION_ID", "GHOSTTY_RESOURCES_DIR",
+	"WT_SESSION", "WT_PROFILE_ID",
+}
+
+// TTYKey holds the session's terminal device, such as /dev/ttys003, where there is one.
+const TTYKey = "CCSHIFT_TTY"
 
 // sameInstance reports whether a session's env points at the terminal instance ccshift runs in.
 // Pane and window ids are only unique inside one instance.

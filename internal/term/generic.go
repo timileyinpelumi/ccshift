@@ -51,6 +51,9 @@ func PrintCommands(w io.Writer, ls []Launch) {
 }
 
 func withoutEnv(argv []string) []string {
+	if len(argv) > 2 && argv[1] == "exec" && argv[2] == "--" {
+		return argv[3:]
+	}
 	if len(argv) == 0 || argv[0] != "env" {
 		return argv
 	}

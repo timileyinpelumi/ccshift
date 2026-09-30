@@ -9,8 +9,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/timileyinpelumi/ccshift/internal/names"
@@ -71,15 +72,6 @@ func gitInfo(ctx context.Context, cwd string) (names.Git, error) {
 	return g, nil
 }
 
-// execReplace hands the process over to Claude, so the tab runs Claude and not ccshift.
-func execReplace(argv []string) error {
-	path, err := exec.LookPath(argv[0])
-	if err != nil {
-		return err
-	}
-	return syscall.Exec(path, argv, os.Environ())
-}
-
 func dirExists(path string) bool {
 	fi, err := os.Stat(path)
 	return err == nil && fi.IsDir()
@@ -99,24 +91,49 @@ func runEditor(path string) error {
 	return cmd.Run()
 }
 
+// notify shows a desktop notification with whatever the system provides. It never waits or fails.
 func notify(title, body string) {
-	path, err := exec.LookPath("notify-send")
-	if err != nil {
-		return
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		script := fmt.Sprintf("display notification %s with title %s", strconv.Quote(body), strconv.Quote(title))
+		cmd = exec.Command("osascript", "-e", script)
+	case "windows":
+		cmd = exec.Command("powershell", "-NoProfile", "-NonInteractive", "-Command", toastScript, title, body)
+	default:
+		path, err := exec.LookPath("notify-send")
+		if err != nil {
+			return
+		}
+		cmd = exec.Command(path, "--app-name=ccshift", title, body)
 	}
-	cmd := exec.Command(path, "--app-name=ccshift", title, body)
 	if cmd.Start() == nil {
 		go cmd.Wait()
 	}
 }
 
+// toastScript takes the title and body as arguments so neither is parsed as PowerShell.
+const toastScript = `& { param($t, $b)
+[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+$x = [Windows.UI.Notifications.ToastNotificationManager]::GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02)
+$n = $x.GetElementsByTagName('text'); $n.Item(0).InnerText = $t; $n.Item(1).InnerText = $b
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('ccshift').Show([Windows.UI.Notifications.ToastNotification]::new($x)) }`
+
+// notifier names the program notify needs, for doctor.
+func notifier() string {
+	switch runtime.GOOS {
+	case "darwin":
+		return "osascript"
+	case "windows":
+		return "powershell"
+	}
+	return "notify-send"
+}
+
 func runShell(ctx context.Context, command string, stdin []byte) ([]byte, error) {
-	cmd := exec.CommandContext(ctx, "sh", "-c", command)
+	cmd := shellCommand(ctx, command)
 	cmd.Stdin = bytes.NewReader(stdin)
 	cmd.Env = append(os.Environ(), statuslineGuard+"=1")
-	// Kill the whole process group at the deadline, and stop waiting on a pipe a grandchild still holds.
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
 	cmd.WaitDelay = 100 * time.Millisecond
 	return cmd.Output()
 }

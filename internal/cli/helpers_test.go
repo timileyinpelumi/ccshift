@@ -18,6 +18,8 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
+func init() { term.EnvKeys = append(term.EnvKeys, "FAKE_PANE") }
+
 type fakeTerm struct {
 	name    string
 	tier    term.Tier
@@ -127,6 +129,7 @@ func testApp(t *testing.T, tier term.Tier) *harness {
 			return nil, os.ErrNotExist
 		},
 		AncestorPIDs: func(int) []int { return nil },
+		TTYOf:        func(int) string { return "" },
 		Comms:        func([]int) []string { return nil },
 		Git: func(_ context.Context, cwd string) (names.Git, error) {
 			if err := h.gitErr[cwd]; err != nil {

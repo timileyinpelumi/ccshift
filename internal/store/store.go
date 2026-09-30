@@ -7,13 +7,18 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"syscall"
+	"runtime"
 	"time"
 )
 
 type Store struct{ Dir string }
 
 func DefaultDir() string {
+	if runtime.GOOS == "windows" {
+		if dir, err := os.UserCacheDir(); err == nil { // %LocalAppData%
+			return filepath.Join(dir, "ccshift", "state")
+		}
+	}
 	dir := os.Getenv("XDG_STATE_HOME")
 	if dir == "" {
 		home, _ := os.UserHomeDir()
@@ -34,12 +39,12 @@ func (s *Store) Lock() (func(), error) {
 	if err != nil {
 		return nil, err
 	}
-	if err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX); err != nil {
+	if err := lockFile(f, true); err != nil {
 		f.Close()
 		return nil, err
 	}
 	return func() {
-		syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		unlockFile(f)
 		f.Close()
 	}, nil
 }
@@ -52,10 +57,10 @@ func (s *Store) TryLock(timeout time.Duration) (func(), error) {
 	}
 	deadline := time.Now().Add(timeout)
 	for {
-		err := syscall.Flock(int(f.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		err := lockFile(f, false)
 		if err == nil {
 			return func() {
-				syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+				unlockFile(f)
 				f.Close()
 			}, nil
 		}

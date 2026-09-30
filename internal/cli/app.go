@@ -34,6 +34,8 @@ type App struct {
 	Env          map[string]string
 	SelfPID      int
 	EnvOf        func(pid int) (map[string]string, error)
+	TTYOf        func(pid int) string
+	hookSession  string // the session a running hook belongs to
 	AncestorPIDs func(pid int) []int
 	Comms        func(pids []int) []string
 	Git          func(ctx context.Context, cwd string) (names.Git, error)
@@ -84,7 +86,7 @@ func NewApp() (*App, error) {
 	app := &App{
 		Out: os.Stdout, Err: os.Stderr, In: os.Stdin,
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
-		SelfPID: os.Getpid(), EnvOf: proc.Environ, AncestorPIDs: proc.Ancestors, Comms: comms,
+		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
 		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
@@ -123,6 +125,7 @@ func (a *App) commands() []command {
 		{"ws", "list workspaces", (*App).cmdWs},
 		{"init", "add autosave hooks and the statusline to Claude Code", (*App).cmdInit},
 		{"doctor", "check the setup", (*App).cmdDoctor},
+		{"exec", "run a command outside any Claude session (used by restore on Windows)", (*App).cmdExec},
 		{"hook", "called by Claude Code hooks", (*App).cmdHook},
 		{"statusline", "called by Claude Code as the status line command", (*App).cmdStatusline},
 		{"version", "print the version", func(a *App, _ context.Context, _ []string) error {

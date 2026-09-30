@@ -46,6 +46,12 @@ func (a *App) cmdHook(ctx context.Context, args []string) (err error) {
 		return fmt.Errorf("expected one event name")
 	}
 	in := claude.ParseHookInput(readInput(a.In))
+	a.hookSession = in.SessionID
+	if args[0] == "session-start" || args[0] == "stop" {
+		if err := a.recordSessionEnv(in.SessionID); err != nil {
+			a.Store.Log("hook %s: %v", args[0], err)
+		}
+	}
 	switch args[0] {
 	case "session-start":
 		// Done on its own first, so a resumed session is not hidden if the autosave below fails.
@@ -212,6 +218,16 @@ func (a *App) autosaveLocked(v *view) error {
 	}); err != nil {
 		a.Store.Log("autosave: %v", err)
 	}
+	recorded := map[string]map[string]string{}
+	a.Store.Load(sessionEnvFile, &recorded)
+	for id := range recorded {
+		// Only running sessions have a tab; a resumed one records its new tab when it starts.
+		// The session whose hook this is may not be listed yet, and is kept.
+		if _, running := liveIn[id]; !running && id != a.hookSession {
+			delete(recorded, id)
+		}
+	}
+	a.Store.Put(sessionEnvFile, recorded)
 	return a.Store.StampAutosave(now)
 }
 

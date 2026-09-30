@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -108,7 +109,8 @@ func (r *Reader) Live(ctx context.Context) ([]Session, error) {
 			}
 			// A session file can outlive its process and the pid can be reused.
 			if rs.ProcStart != "" {
-				if st, err := r.StartTime(rs.PID); err != nil || st != rs.ProcStart {
+				st, err := r.StartTime(rs.PID)
+				if !errors.Is(err, proc.ErrUnsupported) && (err != nil || st != rs.ProcStart) {
 					continue
 				}
 			}

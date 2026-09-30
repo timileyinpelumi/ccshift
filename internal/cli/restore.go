@@ -86,7 +86,7 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 		if err := a.recordApplied(plan.Launched); err != nil {
 			return err
 		}
-		err = ad.OpenWindow(ctx, ws, isolated(plan.Launches))
+		err = ad.OpenWindow(ctx, ws, a.isolated(plan.Launches))
 		if errors.Is(err, term.ErrPrinted) {
 			// The terminal printed the commands itself. Nothing is running, so nothing is recorded.
 			continue
