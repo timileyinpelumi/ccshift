@@ -9,9 +9,11 @@ import (
 
 	"github.com/timileyinpelumi/ccshift/internal/config"
 	"github.com/timileyinpelumi/ccshift/internal/layout"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 func (a *App) cmdSave(ctx context.Context, args []string) error {
+	u := a.ui()
 	fs := flag.NewFlagSet("save", flag.ContinueOnError)
 	fs.SetOutput(a.Err)
 	edit := fs.Bool("edit", false, "edit the order in $EDITOR before saving")
@@ -143,9 +145,9 @@ func (a *App) cmdSave(ctx context.Context, args []string) error {
 		if err := a.Store.SetOrder(ws, ids); err != nil {
 			return err
 		}
-		fmt.Fprintf(a.Out, "%s: saved %d sessions\n", ws, len(items))
+		u.OK("%s: saved %d sessions", u.Paint(ui.Bold, ws), len(items))
 		for _, e := range snap.Sessions {
-			fmt.Fprintf(a.Out, "  %d. %s  %s\n", e.Position, layout.Title(e), e.CWD)
+			a.listItem(u, e.Position, layout.Title(e), e.CWD)
 		}
 		if len(dropped) > 0 {
 			fmt.Fprintf(a.Out, "  dropped %d sessions that are no longer running: %s. Undo with: ccshift restore %s --pick\n", len(dropped), strings.Join(dropped, ", "), ws)

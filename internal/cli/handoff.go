@@ -16,6 +16,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/store"
 	"github.com/timileyinpelumi/ccshift/internal/target"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 const (
@@ -225,7 +226,12 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 		return err
 	}
 
-	fmt.Fprintf(a.Out, "Handed %s off to %s. The brief is at %s.\n", src.name, newName, briefPath)
+	if u := a.ui(); u.Color {
+		u.OK("Handed %s off to %s", u.Paint(ui.Bold, src.name), u.Paint(ui.Bold, newName))
+		fmt.Fprintln(a.Out, u.Paint(ui.Dim, "  brief: "+briefPath))
+	} else {
+		fmt.Fprintf(a.Out, "Handed %s off to %s. The brief is at %s.\n", src.name, newName, briefPath)
+	}
 	defer a.supportNote()
 	if !src.live {
 		return nil
@@ -234,7 +240,7 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	closer, canClose := v.adapter.(term.TabCloser)
 	switch {
 	case !*closeOld:
-		fmt.Fprintln(a.Out, left, "Close it when you are done with it.")
+		fmt.Fprintln(a.Out, a.ui().Paint(ui.Dim, left+" Close it when you are done with it."))
 	case !canClose:
 		fmt.Fprintf(a.Out, "%s can't close a tab from outside. %s\n", v.adapter.Name(), left)
 	case !src.matched:
@@ -268,13 +274,20 @@ func (a *App) writeBrief(ctx context.Context, src handoffSource, model string) (
 	if model == "" {
 		model = a.Config.BriefModel
 	}
-	fmt.Fprintf(a.Out, "Writing the brief for %s with %s. This can take a minute or two.\n", src.name, model)
+	u := a.ui()
+	if !u.Color {
+		fmt.Fprintf(a.Out, "Writing the brief for %s with %s. This can take a minute or two.\n", src.name, model)
+	}
 	bctx, cancel := context.WithTimeout(ctx, briefBudget)
 	defer cancel()
-	brief, err := a.RunClaude(bctx, src.cwd, []string{"-p", "--model", model, "--tools", "Read,Grep,Glob", "--no-session-persistence"}, handoff.Prompt(extract))
-	if err == nil && strings.TrimSpace(brief) == "" {
-		err = errors.New("the brief came back empty")
-	}
+	var brief string
+	err = u.Spin(fmt.Sprintf("Writing the brief for %s with %s", u.Paint(ui.Bold, src.name), model), func() (err error) {
+		brief, err = a.RunClaude(bctx, src.cwd, []string{"-p", "--model", model, "--tools", "Read,Grep,Glob", "--no-session-persistence"}, handoff.Prompt(extract))
+		if err == nil && strings.TrimSpace(brief) == "" {
+			err = errors.New("the brief came back empty")
+		}
+		return err
+	})
 	if err != nil {
 		return "", fmt.Errorf("the brief could not be written: %w\nThe extract it would have been written from is at %s. To continue from that by hand:\n  cd %s && claude %s",
 			err, extractPath, term.ShellJoin([]string{src.cwd}), term.ShellJoin([]string{"Read " + extractPath + " and continue from it."}))

@@ -52,7 +52,12 @@ func (a *App) cmdUpdate(ctx context.Context, args []string) error {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
-	tag, err := a.Releases.Latest(ctx)
+	u := a.ui()
+	var tag string
+	err := u.Spin("Checking for a new version", func() (err error) {
+		tag, err = a.Releases.Latest(ctx)
+		return err
+	})
 	if err != nil {
 		return fmt.Errorf("checking for a new version: %w", err)
 	}
@@ -65,8 +70,10 @@ func (a *App) cmdUpdate(ctx context.Context, args []string) error {
 		fmt.Fprintf(a.Out, "ccshift %s is available (you have %s). Run: ccshift update\n", tag, version)
 		return nil
 	}
-	fmt.Fprintf(a.Out, "Downloading ccshift %s...\n", tag)
-	if err := a.Releases.Install(ctx, tag, a.binaryPath()); err != nil {
+	if !u.Color {
+		fmt.Fprintf(a.Out, "Downloading ccshift %s...\n", tag)
+	}
+	if err := u.Spin("Downloading ccshift "+tag, func() error { return a.Releases.Install(ctx, tag, a.binaryPath()) }); err != nil {
 		return fmt.Errorf("updating: %w", err)
 	}
 	a.done(fmt.Sprintf("Updated ccshift from %s to %s.", version, tag))

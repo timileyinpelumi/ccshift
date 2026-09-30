@@ -9,21 +9,16 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 // color wraps s in an ANSI colour when writing to a terminal, unless NO_COLOR is set.
-func (a *App) color(code, s string) string {
-	f, ok := a.Out.(*os.File)
-	if !ok || a.Env["NO_COLOR"] != "" {
-		return s
-	}
-	if fi, err := f.Stat(); err != nil || fi.Mode()&os.ModeCharDevice == 0 {
-		return s
-	}
-	return "\033[" + code + "m" + s + "\033[0m"
-}
+func (a *App) ui() *ui.UI { return ui.For(a.Out, func(k string) string { return a.Env[k] }) }
 
-func (a *App) done(msg string) { fmt.Fprintf(a.Out, "%s %s\n", a.color("32", "✓"), msg) }
+func (a *App) color(code, s string) string { return a.ui().Paint(ui.Style(code), s) }
+
+func (a *App) done(msg string) { a.ui().OK("%s", msg) }
 
 // packaged reports whether the binary belongs to a package manager, which should remove it.
 func packaged(exe string) bool {

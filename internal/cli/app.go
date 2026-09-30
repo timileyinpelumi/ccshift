@@ -19,6 +19,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/proc"
 	"github.com/timileyinpelumi/ccshift/internal/store"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 	"github.com/timileyinpelumi/ccshift/internal/update"
 )
 
@@ -185,7 +186,7 @@ func (a *App) Run(ctx context.Context, args []string) int {
 			}
 			return 0
 		}
-		fmt.Fprintln(a.Err, "ccshift:", err)
+		a.errorf("%v", err)
 		var ue usageError
 		if errors.As(err, &ue) {
 			return 2
@@ -198,10 +199,16 @@ func (a *App) Run(ctx context.Context, args []string) int {
 }
 
 func (a *App) usage(w io.Writer) {
-	fmt.Fprintln(w, "usage: ccshift <command> [args]")
+	u := ui.For(w, func(k string) string { return a.Env[k] })
+	u.Banner()
+	fmt.Fprintln(w, u.Paint(ui.Bold, "usage:")+" ccshift <command> [args]")
 	fmt.Fprintln(w)
-	fmt.Fprintln(w, "commands:")
+	fmt.Fprintln(w, u.Paint(ui.Bold, "commands:"))
 	for _, c := range a.commands() {
-		fmt.Fprintf(w, "  %-11s %s\n", c.name, c.summary)
+		if c.name == "notify" {
+			continue
+		}
+		fmt.Fprintf(w, "  %s %s\n", u.Paint(ui.Cyan, fmt.Sprintf("%-11s", c.name)), c.summary)
 	}
+	fmt.Fprintf(w, "\n%s\n", u.Paint(ui.Dim, "Run ccshift on its own to pick a session. Docs: https://www.timileyin.dev/ccshift"))
 }

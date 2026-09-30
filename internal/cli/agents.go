@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -137,7 +136,7 @@ func (a *App) setupAgents(remove bool) error {
 		}
 		f, err := settings.Load(filepath.Join(dir, ag.file))
 		if err != nil {
-			fmt.Fprintf(a.Out, "Skipped %s: %v\n", ag.label, err)
+			a.ui().Warn("Skipped %s: %v", ag.label, err)
 			continue
 		}
 		before, _ := f.Bytes()
@@ -159,9 +158,9 @@ func (a *App) setupAgents(remove bool) error {
 			return err
 		}
 		if remove {
-			fmt.Fprintf(a.Out, "Removed the hooks from %s.\n", f.Path)
+			a.ui().OK("Removed the hooks from %s.", f.Path)
 		} else {
-			fmt.Fprintf(a.Out, "Added hooks for %s to %s.\n", ag.label, f.Path)
+			a.ui().OK("Added hooks for %s to %s.", ag.label, f.Path)
 		}
 	}
 	return nil

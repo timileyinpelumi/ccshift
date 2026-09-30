@@ -45,7 +45,7 @@ func (a *App) cmdForget(ctx context.Context, args []string) error {
 	for _, ws := range wss {
 		snap, ok, err := a.Store.Latest(ws)
 		if err != nil {
-			fmt.Fprintf(a.Err, "ccshift: skipping workspace %s, its save can't be read (%v)\n", ws, err)
+			a.errorf("skipping workspace %s, its save can't be read (%v)", ws, err)
 			continue
 		}
 		if !ok {
@@ -97,6 +97,6 @@ func (a *App) cmdForget(ctx context.Context, args []string) error {
 		}
 		from = append(from, h.snap.Workspace)
 	}
-	fmt.Fprintf(a.Out, "Removed %s from %s.\n", layout.Title(first), strings.Join(from, ", "))
+	a.ui().OK("Removed %s from %s.", layout.Title(first), strings.Join(from, ", "))
 	return nil
 }

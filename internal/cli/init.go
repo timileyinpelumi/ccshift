@@ -17,6 +17,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/settings"
 	"github.com/timileyinpelumi/ccshift/internal/store"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 const hookTimeoutSeconds = 5
@@ -138,7 +139,7 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 		if err := a.Store.SetInitState(st); err != nil {
 			return err
 		}
-		fmt.Fprintf(a.Out, "Removed ccshift's hooks and statusline from %s.\n", f.Path)
+		a.ui().OK("Removed ccshift's hooks and statusline from %s.", f.Path)
 		return a.setupAgents(true)
 	}
 
@@ -172,7 +173,7 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 
 	after, _ := f.Bytes()
 	if bytes.Equal(before, after) {
-		fmt.Fprintf(a.Out, "Hooks and statusline are already set up in %s.\n", f.Path)
+		a.ui().OK("Hooks and statusline are already set up in %s.", f.Path)
 	} else {
 		// Only a file without ccshift in it is worth keeping as the backup.
 		if !hadOurs {
@@ -186,8 +187,8 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 		if err := f.Save(); err != nil {
 			return err
 		}
-		fmt.Fprintf(a.Out, "Added autosave hooks and the statusline to %s.\n", f.Path)
-		fmt.Fprintf(a.Out, "The previous file is at %s.ccshift-bak. New Claude sessions pick this up; running ones need a restart.\n", f.Path)
+		a.ui().OK("Added autosave hooks and the statusline to %s.", f.Path)
+		fmt.Fprintln(a.Out, a.ui().Paint(ui.Dim, fmt.Sprintf("The previous file is at %s.ccshift-bak. New Claude sessions pick this up; running ones need a restart.", f.Path)))
 	}
 
 	if err := a.setupAgents(false); err != nil {
@@ -197,7 +198,7 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintf(a.Out, "Terminal: %s (%s).\n", ad.Name(), tierNote(ad.Tier()))
+	a.ui().Info("Terminal: %s (%s).", a.ui().Paint(ui.Bold, ad.Name()), tierNote(ad.Tier()))
 	if c, ok := ad.(term.Checker); ok {
 		if err := c.Check(ctx); err != nil {
 			fmt.Fprintf(a.Out, "  %v\n", err)
@@ -281,13 +282,21 @@ func (a *App) cmdDoctor(ctx context.Context, args []string) error {
 		return usageError{"doctor takes no arguments"}
 	}
 	problems := 0
+	u := a.ui()
 	report := func(ok bool, what, fix string) {
-		if ok {
+		switch {
+		case ok && u.Color:
+			u.OK("%s", what)
+		case ok:
 			fmt.Fprintf(a.Out, "ok       %s\n", what)
-			return
+		case u.Color:
+			problems++
+			u.Fail("%s", what)
+			fmt.Fprintln(a.Out, "  "+u.Paint(ui.Dim, fix))
+		default:
+			problems++
+			fmt.Fprintf(a.Out, "problem  %s\n         %s\n", what, fix)
 		}
-		problems++
-		fmt.Fprintf(a.Out, "problem  %s\n         %s\n", what, fix)
 	}
 
 	report(a.HasCommand(a.ClaudeBin), "Claude Code is installed", "the claude command was not found on your PATH; ccshift works on top of Claude Code")

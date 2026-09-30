@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/names"
 	"github.com/timileyinpelumi/ccshift/internal/store"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 func (a *App) cmdRestore(ctx context.Context, args []string) error {
@@ -62,6 +64,7 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 		return ok
 	}
 	failed := 0
+	u := a.ui()
 	for _, ws := range workspaces {
 		snap, ok, err := a.snapshotFor(ws, *pick)
 		if err != nil {
@@ -72,12 +75,12 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 			continue
 		}
 		plan := layout.PlanRestore(snap, running, transcriptExists, a.DirExists, a.ClaudeBin)
-		fmt.Fprintf(a.Out, "%s: opening %d sessions in %s\n", ws, len(plan.Launches), ad.Name())
+		u.Info("%s: opening %d sessions in %s", u.Paint(ui.Bold, ws), len(plan.Launches), ad.Name())
 		for i, l := range plan.Launches {
-			fmt.Fprintf(a.Out, "  %d. %s  %s\n", i+1, l.Title, l.CWD)
+			a.listItem(u, i+1, l.Title, l.CWD)
 		}
 		for _, s := range plan.Skipped {
-			fmt.Fprintf(a.Out, "  skipped %s: %s\n", layout.Title(s.Entry), s.Reason)
+			fmt.Fprintf(a.Out, "  %s\n", u.Paint(ui.Amber, fmt.Sprintf("skipped %s: %s", layout.Title(s.Entry), s.Reason)))
 		}
 		if *dryRun || len(plan.Launches) == 0 {
 			continue
@@ -92,11 +95,14 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 			continue
 		}
 		if err != nil {
-			fmt.Fprintf(a.Err, "ccshift: %s: couldn't open tabs in %s: %v\n", ws, ad.Name(), err)
+			a.errorf("%s: couldn't open tabs in %s: %v", ws, ad.Name(), err)
 			fmt.Fprintln(a.Out, "  Run these yourself:")
 			term.PrintCommands(a.Out, plan.Launches)
 			failed++
 			continue
+		}
+		if u.Color {
+			u.OK("Opened %d tabs in %s", len(plan.Launches), ad.Name())
 		}
 		// A session saved in two workspaces must only open once.
 		for _, l := range plan.Launches {
@@ -168,4 +174,25 @@ func (a *App) snapshotFor(ws string, pick bool) (store.Snapshot, bool, error) {
 		return store.Snapshot{}, false, usageError{"no such save"}
 	}
 	return hist[n-1], true, nil
+}
+
+// listItem prints one numbered session under a heading.
+func (a *App) listItem(u *ui.UI, n int, name, cwd string) {
+	if u.Color {
+		if home, _ := os.UserHomeDir(); home != "" && strings.HasPrefix(cwd, home) {
+			cwd = "~" + cwd[len(home):]
+		}
+	}
+	fmt.Fprintf(a.Out, "  %s %s  %s\n", u.Paint(ui.Dim, fmt.Sprintf("%d.", n)), u.Paint(ui.Bold, name), u.Paint(ui.Dim, cwd))
+}
+
+// errorf reports a problem that does not stop the command.
+func (a *App) errorf(format string, args ...any) {
+	msg := fmt.Sprintf(format, args...)
+	eu := ui.For(a.Err, func(k string) string { return a.Env[k] })
+	if eu.Color {
+		fmt.Fprintln(a.Err, eu.Paint(ui.Red, "✗")+" "+msg)
+		return
+	}
+	fmt.Fprintln(a.Err, "ccshift: "+msg)
 }

@@ -155,7 +155,7 @@ Claude itself takes a new name when the session is next resumed. For an immediat
 
 ### Context warning
 
-`ccshift ls` shows how much of its context window each session has used. You get a desktop notification when a session passes 70% and again at 85%. Your own statusline keeps working: ccshift runs it and shows its output.
+`ccshift ls` shows how much of its context window each session has used. You get a desktop notification when a session passes 70% and again at 85%. It names the session's code, so handing it off is `ccshift handoff KTR`, and on Linux it has a Hand off button that does it for you. Your own statusline keeps working: ccshift runs it and shows its output.
 
 ### Handoff
 
@@ -212,7 +212,7 @@ Sessions outside these paths go into `default`. `ccshift ws` lists workspaces.
 | `ccshift doctor` | Check the setup |
 | `ccshift version` | Print the version |
 
-A `<target>` is a number from `ccshift ls`, a name, the start of a name, the start of a session id, or `.` for the session the command is run from. Most commands take `--terminal <name>` to override terminal detection.
+A `<target>` is a number from `ccshift ls`, a session's three letter code from `ccshift ls` (such as `KTR`, in any case), a name, the start of a name, the start of a session id, or `.` for the session the command is run from. A session keeps its code across restarts. Most commands take `--terminal <name>` to override terminal detection.
 
 ## Terminals
 

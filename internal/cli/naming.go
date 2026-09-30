@@ -16,6 +16,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/names"
 	"github.com/timileyinpelumi/ccshift/internal/target"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/ui"
 )
 
 const (
@@ -43,7 +44,7 @@ func emptyEntry(e names.Entry) bool {
 func (a *App) loadNames() map[string]names.Entry {
 	m := map[string]names.Entry{}
 	if err := a.Store.Load(namesFile, &m); err != nil {
-		fmt.Fprintf(a.Err, "ccshift: ignoring saved names (%v)\n", err)
+		a.errorf("ignoring saved names (%v)", err)
 		return map[string]names.Entry{}
 	}
 	return m
@@ -382,15 +383,15 @@ func (a *App) cmdRename(ctx context.Context, args []string) error {
 		switch {
 		case name != "":
 			renamed++
-			fmt.Fprintf(a.Out, "Renamed %s to %s.\n", it.Session.Name, name)
+			a.ui().OK("Renamed %s to %s.", it.Session.Name, a.ui().Paint(ui.Bold, name))
 		case now.Generated:
-			fmt.Fprintf(a.Out, "Set %s back to its generated name, %s.\n", it.Session.Name, now.Session.Name)
+			a.ui().OK("Set %s back to its generated name, %s.", it.Session.Name, a.ui().Paint(ui.Bold, now.Session.Name))
 		default:
-			fmt.Fprintf(a.Out, "%s now shows the name Claude has for it, %s.\n", it.Session.Name, now.Session.Name)
+			a.ui().OK("%s now shows the name Claude has for it, %s.", it.Session.Name, a.ui().Paint(ui.Bold, now.Session.Name))
 		}
 	}
 	if renamed > 0 {
-		fmt.Fprintln(a.Out, "Claude picks a new name up when the session is next resumed. To change it there now, run /rename <name> in that session.")
+		fmt.Fprintln(a.Out, a.ui().Paint(ui.Dim, "Claude picks a new name up when the session is next resumed. To change it there now, run /rename <name> in that session."))
 	}
 	return nil
 }
