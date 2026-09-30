@@ -45,6 +45,25 @@ main() {
 	else
 		base="https://github.com/$repo/releases/download/$version"
 	fi
+	if [ "$version" = latest ]; then
+		# The latest tag is where /releases/latest redirects to.
+		tag=$(curl -fsSI "https://github.com/$repo/releases/latest" 2>/dev/null | tr -d '\r' | awk 'tolower($1) == "location:" { n = split($2, p, "/"); print p[n] }')
+	else
+		tag=$version
+	fi
+
+	if [ -x "$dir/ccshift" ]; then
+		current=$("$dir/ccshift" version 2>/dev/null || echo unknown)
+		echo
+		printf '%sccshift %s is already installed%s at %s.\n' "$bold" "$current" "$reset" "$dir/ccshift"
+		if [ -n "$tag" ] && [ "v$current" = "$tag" ]; then
+			ask "It is the latest version. Reinstall it anyway? [y/N] " n || { echo "Nothing changed."; return; }
+		else
+			ask "Replace it with ${tag:-the latest release}? [Y/n] " y || { echo "Nothing changed."; return; }
+		fi
+		echo
+	fi
+
 	asset="ccshift_${os}_$arch.tar.gz"
 	tmp=$(mktemp -d)
 	trap 'rm -rf "$tmp"' EXIT
@@ -77,9 +96,19 @@ main() {
 		*":$dir:"*) on_path=yes ;;
 		*) on_path=no ;;
 	esac
+	# A different ccshift earlier on PATH would keep running instead of this one.
+	found=$(command -v ccshift 2>/dev/null || true)
+	if [ "$on_path" = yes ] && [ -n "$found" ] && [ "$found" != "$dir/ccshift" ]; then
+		shadow=$found
+	fi
 
 	echo
 	printf '%s%sccshift is installed.%s\n' "$bold" "$green" "$reset"
+	if [ -n "${shadow:-}" ]; then
+		echo
+		printf '%sAnother ccshift comes first on your PATH:%s %s\n' "$amber" "$reset" "$shadow"
+		printf 'Remove it, or your shell keeps running that one:\n  %srm %s%s\n' "$cyan" "$shadow" "$reset"
+	fi
 	if [ "$on_path" = no ]; then
 		echo
 		printf '%sAdd it to your PATH%s by putting this line in your shell profile:\n' "$bold" "$reset"
@@ -89,15 +118,10 @@ main() {
 	# The script's stdin is the download, so the answer is read from the terminal.
 	if [ -z "${CCSHIFT_NO_SETUP:-}" ] && [ -r /dev/tty ] && [ -t 1 ]; then
 		echo
-		printf 'Turn on autosave now? It adds three hooks to Claude Code and backs up your settings. [Y/n] '
-		answer=$(head -n 1 </dev/tty 2>/dev/null || true)
-		case "$answer" in
-			n* | N*) ;;
-			*)
-				echo
-				"$dir/ccshift" init && setup_done=yes || true
-				;;
-		esac
+		if ask "Turn on autosave now? It adds three hooks to Claude Code and backs up your settings. [Y/n] " y; then
+			echo
+			"$dir/ccshift" init && setup_done=yes || true
+		fi
 	fi
 
 	echo
@@ -146,6 +170,22 @@ banner() {
 ART
 	printf '%s\n' "$reset"
 	printf '%sKeep your Claude Code sessions across restarts.%s\n\n' "$dim" "$reset"
+}
+
+# ask prints a question and reads the answer from the terminal. With no terminal it takes the
+# default given as $2, so piped and scripted installs go ahead.
+ask() {
+	if [ ! -r /dev/tty ] || [ ! -t 1 ]; then
+		[ "$2" = y ]
+		return
+	fi
+	printf '%s' "$1"
+	answer=$(head -n 1 </dev/tty 2>/dev/null || true)
+	case "$answer" in
+		y* | Y*) return 0 ;;
+		n* | N*) return 1 ;;
+		*) [ "$2" = y ] ;;
+	esac
 }
 
 step() { printf '%s›%s %s' "$cyan" "$reset" "$1"; }

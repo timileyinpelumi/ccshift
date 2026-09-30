@@ -32,6 +32,7 @@ Website: https://www.timileyin.dev/ccshift
 - [Configuration](#configuration)
 - [How it works](#how-it-works)
 - [Platform status](#platform-status)
+- [Update](#update)
 - [Uninstall](#uninstall)
 - [Development](#development)
 
@@ -181,6 +182,7 @@ Sessions outside these paths go into `default`. `ccshift ws` lists workspaces.
 | `ccshift forget <name>` | Remove a session from the save |
 | `ccshift ws` | List workspaces |
 | `ccshift init [--remove]` | Add or remove the hooks and statusline |
+| `ccshift update [--check]` | Install the latest version |
 | `ccshift uninstall [--keep-data]` | Remove ccshift and everything it added |
 | `ccshift doctor` | Check the setup |
 | `ccshift version` | Print the version |
@@ -227,6 +229,7 @@ history_keep = 20                 # manual saves kept per workspace
 sync_tab_titles = true            # keep tab titles in step with session names
 brief_model = "sonnet"            # model that writes handoff briefs
 support_note = true               # an occasional line asking for support
+auto_update = true                # install new releases automatically
 ticket_pattern = "\\b([A-Z][A-Z0-9]{1,5})[-_](\\d{2,})\\b"   # prefix and number of a ticket id
 ticket_ignore = ["fix", "node", "react"]                     # prefixes that are not tickets
 
@@ -251,6 +254,17 @@ The design is written up in [docs/design](docs/design/2026-09-30-ccshift-design.
 | Linux | Stable |
 | macOS | Beta |
 | Windows | Beta |
+
+## Update
+
+ccshift checks for a new release once a day, after a command you run in a terminal, and installs it. Set `auto_update = false` to turn that off and update by hand:
+
+```sh
+ccshift update          # install the latest version
+ccshift update --check  # only say whether there is one
+```
+
+Running the install script again also updates, and asks before replacing an existing install. A `.deb` or `.rpm` install is updated by installing the new package.
 
 ## Uninstall
 

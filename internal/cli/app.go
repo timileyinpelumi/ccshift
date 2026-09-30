@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -17,6 +19,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/proc"
 	"github.com/timileyinpelumi/ccshift/internal/store"
 	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/update"
 )
 
 // version is set at release time with -ldflags.
@@ -51,6 +54,8 @@ type App struct {
 	Editor       func(path string) error
 	ClaudeDir    string
 	ConfigPath   string
+	Releases     releases
+	Interactive  func() bool
 	Executable   string
 	HasCommand   func(name string) bool
 	Notify       func(title, body string)
@@ -89,7 +94,8 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Executable: exe,
+		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Interactive: stdoutIsTerminal,
+		Releases: update.Releases{Base: update.DefaultBase, OS: runtime.GOOS, Arch: runtime.GOARCH}, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}
 	app.RunClaude = func(ctx context.Context, cwd string, args []string, stdin string) (string, error) {
@@ -126,6 +132,7 @@ func (a *App) commands() []command {
 		{"ws", "list workspaces", (*App).cmdWs},
 		{"init", "add autosave hooks and the statusline to Claude Code", (*App).cmdInit},
 		{"doctor", "check the setup", (*App).cmdDoctor},
+		{"update", "install the latest version", (*App).cmdUpdate},
 		{"uninstall", "remove ccshift, its hooks and its saved data", (*App).cmdUninstall},
 		{"exec", "run a command outside any Claude session (used by restore on Windows)", (*App).cmdExec},
 		{"hook", "called by Claude Code hooks", (*App).cmdHook},
@@ -136,6 +143,10 @@ func (a *App) commands() []command {
 		}},
 	}
 }
+
+// quiet commands never trigger an automatic update: they are run by Claude Code, change the
+// binary themselves, or print output meant for another program.
+var quiet = map[string]bool{"hook": true, "statusline": true, "exec": true, "update": true, "uninstall": true, "version": true}
 
 type command struct {
 	name    string
@@ -158,6 +169,9 @@ func (a *App) Run(ctx context.Context, args []string) int {
 		}
 		err := c.run(a, ctx, args[1:])
 		if err == nil {
+			if !quiet[c.name] && !slices.Contains(args, "--json") {
+				a.autoUpdate(ctx)
+			}
 			return 0
 		}
 		fmt.Fprintln(a.Err, "ccshift:", err)

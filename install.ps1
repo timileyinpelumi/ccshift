@@ -31,6 +31,30 @@ function Install-Ccshift {
     Step 'Checking this machine'
     Done "windows $arch"
 
+    $exe = Join-Path $dir 'ccshift.exe'
+    if (Test-Path $exe) {
+        $current = & $exe version
+        $tag = $env:CCSHIFT_VERSION
+        if (-not $tag) {
+            try {
+                $r = Invoke-WebRequest -Uri "https://github.com/$repo/releases/latest" -Method Head -MaximumRedirection 0 -UseBasicParsing -ErrorAction SilentlyContinue
+            } catch { $r = $_.Exception.Response }
+            if ($r -and $r.Headers.Location) { $tag = ($r.Headers.Location -split '/')[-1] }
+        }
+        Write-Host ''
+        Write-Host "ccshift $current is already installed at $exe."
+        if ([Environment]::UserInteractive -and -not $env:CI) {
+            if ($tag -and "v$current" -eq $tag) {
+                $answer = Read-Host 'It is the latest version. Reinstall it anyway? [y/N]'
+                if ($answer -notmatch '^[yY]') { Write-Host 'Nothing changed.'; return }
+            } else {
+                $answer = Read-Host "Replace it with $(if ($tag) { $tag } else { 'the latest release' })? [Y/n]"
+                if ($answer -match '^[nN]') { Write-Host 'Nothing changed.'; return }
+            }
+        }
+        Write-Host ''
+    }
+
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("ccshift-" + [Guid]::NewGuid())
     New-Item -ItemType Directory -Path $tmp | Out-Null
     try {
