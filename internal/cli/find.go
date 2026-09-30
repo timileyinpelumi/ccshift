@@ -35,7 +35,7 @@ func (a *App) cmdFind(ctx context.Context, args []string) error {
 	if *here {
 		kept := matches[:0]
 		for _, m := range matches {
-			if m.CWD == a.Cwd || strings.HasPrefix(m.CWD, a.Cwd+string(filepath.Separator)) {
+			if rel, err := filepath.Rel(a.Cwd, m.CWD); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 				kept = append(kept, m)
 			}
 		}
