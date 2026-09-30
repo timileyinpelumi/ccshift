@@ -127,6 +127,7 @@ func (a *App) commands() []command {
 		{"ls", "list running Claude sessions in tab order", (*App).cmdLs},
 		{"rename", "give a session a name", (*App).cmdRename},
 		{"find", "search past sessions and resume one", (*App).cmdFind},
+		{"pick", "choose a session from a list (also plain ccshift)", (*App).cmdPick},
 		{"handoff", "continue a session in a fresh one, from a written brief", (*App).cmdHandoff},
 		{"save", "save the open sessions of each workspace", (*App).cmdSave},
 		{"restore", "reopen saved sessions in the current terminal", (*App).cmdRestore},
@@ -162,6 +163,10 @@ type usageError struct{ msg string }
 func (e usageError) Error() string { return e.msg }
 
 func (a *App) Run(ctx context.Context, args []string) int {
+	// Plain "ccshift" in a terminal opens the picker.
+	if len(args) == 0 && a.Interactive != nil && a.Interactive() && a.In == os.Stdin {
+		args = []string{"pick"}
+	}
 	if len(args) == 0 || args[0] == "help" || args[0] == "-h" || args[0] == "--help" {
 		a.usage(a.Out)
 		return 0
