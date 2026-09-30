@@ -1,3 +1,10 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/lockup-dark.png">
+    <img src="assets/lockup-light.png" alt="ccshift" width="320">
+  </picture>
+</p>
+
 # ccshift
 
 Keep your Claude Code sessions across restarts.
@@ -50,11 +57,13 @@ curl -fsSL https://www.timileyin.dev/ccshift/install.sh | sh
 irm https://www.timileyin.dev/ccshift/install.ps1 | iex
 ```
 
-**Debian and Ubuntu**
+**Debian and Ubuntu** (apt, with updates through `apt upgrade`)
 
 ```sh
-curl -fsSLO https://github.com/timileyinpelumi/ccshift/releases/latest/download/ccshift_amd64.deb
-sudo apt install ./ccshift_amd64.deb
+sudo install -d -m 0755 /etc/apt/keyrings
+curl -fsSL https://timileyinpelumi.github.io/ccshift/apt/ccshift.gpg | sudo tee /etc/apt/keyrings/ccshift.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/keyrings/ccshift.gpg] https://timileyinpelumi.github.io/ccshift/apt stable main" | sudo tee /etc/apt/sources.list.d/ccshift.list
+sudo apt update && sudo apt install ccshift
 ```
 
 **Fedora and RHEL**
@@ -264,7 +273,7 @@ ccshift update          # install the latest version
 ccshift update --check  # only say whether there is one
 ```
 
-Running the install script again also updates, and asks before replacing an existing install. A `.deb` or `.rpm` install is updated by installing the new package.
+Running the install script again also updates, and asks before replacing an existing install. An apt install updates with `sudo apt upgrade`. An `.rpm` install is updated by installing the new package.
 
 ## Uninstall
 

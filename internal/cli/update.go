@@ -34,7 +34,7 @@ func (a *App) updatable() string {
 	case version == "dev":
 		return "This ccshift was built from source. Update it with: go install github.com/timileyinpelumi/ccshift/cmd/ccshift@latest"
 	case packaged(a.binaryPath()):
-		return "This ccshift was installed by a package manager. Download the new .deb or .rpm from https://github.com/timileyinpelumi/ccshift/releases/latest"
+		return "This ccshift was installed by a package manager. Update it there: sudo apt update && sudo apt install --only-upgrade ccshift"
 	}
 	return ""
 }
