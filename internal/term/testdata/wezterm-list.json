@@ -1,0 +1,26 @@
+[
+  {
+    "window_id": 0,
+    "tab_id": 0,
+    "pane_id": 0,
+    "workspace": "default",
+    "tab_title": "",
+    "tty_name": "/dev/pts/2"
+  },
+  {
+    "window_id": 2,
+    "tab_id": 3,
+    "pane_id": 3,
+    "workspace": "default",
+    "tab_title": "rt-alpha",
+    "tty_name": "/dev/pts/3"
+  },
+  {
+    "window_id": 2,
+    "tab_id": 4,
+    "pane_id": 4,
+    "workspace": "default",
+    "tab_title": "-rt beta's",
+    "tty_name": "/dev/pts/4"
+  }
+]

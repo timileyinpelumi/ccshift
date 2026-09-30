@@ -1,0 +1,42 @@
+[
+  {
+    "id": 0,
+    "is_plugin": true,
+    "title": "(.) - zellij:link",
+    "tab_id": 0,
+    "tab_position": 0,
+    "tab_name": "Tab #1"
+  },
+  {
+    "id": 3,
+    "is_plugin": true,
+    "title": "First Run Setup Wizard (Step 1/1)",
+    "tab_id": 0,
+    "tab_position": 0,
+    "tab_name": "Tab #1"
+  },
+  {
+    "id": 0,
+    "is_plugin": false,
+    "title": "Pane #1",
+    "tab_id": 0,
+    "tab_position": 0,
+    "tab_name": "Tab #1"
+  },
+  {
+    "id": 1,
+    "is_plugin": false,
+    "title": "Pane #1",
+    "tab_id": 1,
+    "tab_position": 1,
+    "tab_name": "second"
+  },
+  {
+    "id": 2,
+    "is_plugin": false,
+    "title": "Pane #1",
+    "tab_id": 2,
+    "tab_position": 2,
+    "tab_name": "third"
+  }
+]

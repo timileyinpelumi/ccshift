@@ -1,0 +1,9 @@
+[
+  {"id": "133a334c", "cwd": "/work/a", "kind": "background", "startedAt": 1788174889924, "sessionId": "bg-1", "name": "Bg job", "state": "blocked"},
+  {"pid": 101, "cwd": "/work/b", "kind": "interactive", "startedAt": 1790000000200, "sessionId": "s-b", "name": "b-2f", "status": "idle"},
+  {"pid": 100, "cwd": "/work/a", "kind": "interactive", "startedAt": 1790000000100, "sessionId": "s-a", "name": "a-1c", "status": "busy"},
+  {"pid": 102, "cwd": "/work/c", "kind": "interactive", "startedAt": 1790000000300, "sessionId": "s-dead", "name": "dead", "status": "idle"},
+  {"pid": 103, "cwd": "/work/d", "kind": "interactive", "startedAt": 1790000000400, "sessionId": "s-notty", "name": "notty", "status": "idle"},
+  {"pid": 104, "cwd": "/work/r", "kind": "interactive", "startedAt": 1790000000600, "sessionId": "s-reused", "name": "r-00", "status": "idle"},
+  {"pid": 105, "cwd": "/work/e", "kind": "headless", "startedAt": 1790000000500, "sessionId": "s-headless", "name": "p", "status": "busy"}
+]

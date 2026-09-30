@@ -1,0 +1,41 @@
+[
+  {
+    "id": 1,
+    "is_focused": false,
+    "tabs": [
+      {
+        "id": 1,
+        "title": "sh",
+        "windows": [
+          {
+            "id": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "is_focused": true,
+    "tabs": [
+      {
+        "id": 2,
+        "title": "rt-alpha",
+        "windows": [
+          {
+            "id": 2
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "-rt beta's",
+        "windows": [
+          {
+            "id": 3
+          }
+        ]
+      }
+    ]
+  }
+]
