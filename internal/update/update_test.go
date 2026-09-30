@@ -13,6 +13,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -109,7 +110,7 @@ func TestLatestAndInstall(t *testing.T) {
 		if b, _ := os.ReadFile(exe); string(b) != string(body) {
 			t.Fatalf("%s: binary = %q", sys.goos, b)
 		}
-		if fi, _ := os.Stat(exe); sys.goos != "windows" && fi.Mode().Perm()&0o100 == 0 {
+		if fi, _ := os.Stat(exe); runtime.GOOS != "windows" && fi.Mode().Perm()&0o100 == 0 {
 			t.Fatalf("%s: not executable: %v", sys.goos, fi.Mode())
 		}
 	}
