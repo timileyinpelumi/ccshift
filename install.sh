@@ -133,6 +133,7 @@ main() {
 	printf '  %sccshift restore%s    bring your sessions back after a restart\n' "$cyan" "$reset"
 	echo
 	printf '%sDocs: https://www.timileyin.dev/ccshift%s\n' "$dim" "$reset"
+	printf '%sSupport ccshift: https://paystack.shop/pay/ne1sknbf3o%s\n' "$dim" "$reset"
 }
 
 uninstall() {

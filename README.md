@@ -34,6 +34,7 @@ Website: https://www.timileyin.dev/ccshift
 - [Update](#update)
 - [Uninstall](#uninstall)
 - [Development](#development)
+- [Support](#support)
 
 ## Install
 
@@ -310,6 +311,10 @@ scripts/e2e.sh ./ccshift                   # end to end against a real tmux
 ```
 
 CI runs the tests on Linux, macOS and Windows. Pushing a `v*` tag builds and publishes a release.
+
+## Support
+
+ccshift is free and built in spare time. If it saves you time, you can support it at https://paystack.shop/pay/ne1sknbf3o. Once a month, after a restore or handoff, ccshift prints one line with this link; `support_note = false` turns it off.
 
 ## Licence
 

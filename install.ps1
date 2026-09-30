@@ -111,6 +111,7 @@ function Install-Ccshift {
     Write-Host '  ccshift restore    ' -ForegroundColor Cyan -NoNewline; Write-Host 'bring your sessions back after a restart'
     Write-Host ''
     Write-Host 'Docs: https://www.timileyin.dev/ccshift' -ForegroundColor DarkGray
+    Write-Host 'Support ccshift: https://paystack.shop/pay/ne1sknbf3o' -ForegroundColor DarkGray
 }
 
 Install-Ccshift

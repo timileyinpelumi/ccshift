@@ -6,7 +6,7 @@ import (
 )
 
 // supportURL is where the occasional note points. Empty turns the note off.
-var supportURL = ""
+var supportURL = "https://paystack.shop/pay/ne1sknbf3o"
 
 const supportEvery = 30 * 24 * time.Hour
 
