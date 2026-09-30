@@ -96,8 +96,8 @@ Matching a Claude session to its tab: read `/proc/<claude pid>/environ` and pass
 | kitty | Exact | `KITTY_WINDOW_ID` | `kitten @ ls` | `kitten @ launch --type=tab --cwd --tab-title` | `set-tab-title --match id:N` | `focus-tab --match id:N` |
 | WezTerm | Exact | `WEZTERM_PANE` | `wezterm cli list --format json` | `wezterm cli spawn --cwd` | `wezterm cli set-tab-title` | `wezterm cli activate-tab` |
 | zellij ≥0.44 | Exact | `ZELLIJ_PANE_ID` | `zellij action list-tabs --json`, `list-panes --json` | `zellij action new-tab --cwd --name` | `rename-tab --tab-id` | `go-to-tab-by-id` |
-| Konsole | Exact if confirmed | `KONSOLE_DBUS_SESSION` | D-Bus `sessionList` | D-Bus `newSession` + `runCommand` | D-Bus `setTitle` | D-Bus `setCurrentSession` |
-| gnome-terminal | LaunchOnly | none | none | `gnome-terminal --tab --working-directory -- cmd` | via Claude session name | not supported |
+| Konsole | Exact | `KONSOLE_DBUS_SESSION` | D-Bus `sessionList` | `--tabs-from-file` | D-Bus `setTabTitleFormat` | D-Bus `setCurrentSession` |
+| gnome-terminal | LaunchOnly | none | none | one command: `--window … --command … --tab … --command …` | via Claude session name | not supported |
 | Ptyxis | LaunchOnly | none | none | `ptyxis --tab -d DIR -x CMD` | via Claude session name | not supported |
 | xfce4-terminal | LaunchOnly | none | none | `xfce4-terminal --tab --working-directory -x cmd` | via Claude session name | not supported |
 | Tilix | LaunchOnly | none | none | `tilix -a app-new-session -w DIR -e CMD` | via Claude session name | not supported |

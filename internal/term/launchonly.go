@@ -50,7 +50,11 @@ func (a *launchOnly) OpenWindow(_ context.Context, title string, ls []Launch) er
 		if err != nil {
 			return fmt.Errorf("%s: %w", a.name, err)
 		}
-		return a.x.Spawn(argv[0], argv[1:]...)
+		err = a.x.Spawn(argv[0], argv[1:]...)
+		// An adapter with both forms uses the one-command form first and falls back to tab by tab.
+		if err == nil || a.open == nil {
+			return err
+		}
 	}
 	for i, l := range ls {
 		argv := a.open(i, l)
@@ -78,7 +82,17 @@ func pick(first bool, a, b string) string {
 
 func launchOnlyAdapters(x Exec) []Adapter {
 	return []Adapter{
+		// One command opens the window and all its tabs. Opening them one at a time relies on the new
+		// window being the focused one when the next tab arrives, which does not always hold.
+		// --command is deprecated in gnome-terminal, so the tab-by-tab form stays as the fallback.
 		&launchOnly{name: "gnome-terminal", tier: LaunchOnly, envKey: "GNOME_TERMINAL_SCREEN", procs: []string{"gnome-terminal"}, x: x,
+			batch: func(ls []Launch, _ string) ([]string, error) {
+				args := []string{"gnome-terminal"}
+				for i, l := range ls {
+					args = append(args, pick(i == 0, "--window", "--tab"), "--working-directory="+l.CWD, "--title="+l.Title, "--command="+ShellJoin(l.Argv))
+				}
+				return args, nil
+			},
 			open: func(i int, l Launch) []string {
 				return append([]string{"gnome-terminal", pick(i == 0, "--window", "--tab"), "--working-directory=" + l.CWD, "--"}, l.Argv...)
 			}},

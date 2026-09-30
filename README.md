@@ -4,7 +4,15 @@ Save the Claude Code sessions you have open in your terminal, in tab order, and 
 
 Site: https://www.timileyin.dev/ccshift
 
-Linux only for now. Works with tmux, kitty, WezTerm and zellij (exact tab order), and gnome-terminal, Ptyxis, Konsole, Tilix, xfce4-terminal, Ghostty, Alacritty and foot (tabs or windows are opened in the saved order, but the order can't be read back from the terminal).
+Linux only for now.
+
+| Terminal | Restore | Tab order | Tab titles and focus |
+|---|---|---|---|
+| tmux, kitty, WezTerm, zellij 0.44+, Konsole | tabs in one window | read from the terminal | yes |
+| GNOME Terminal, Ptyxis, Tilix, Xfce Terminal | tabs in one window | kept from the last restore | no |
+| Alacritty, foot, Ghostty | one window per session | kept from the last restore | no |
+
+All of these have been run for real except Ghostty. Konsole needs `qdbus` for tab order.
 
 ## Install
 

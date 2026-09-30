@@ -9,13 +9,14 @@ import (
 )
 
 type fakeExec struct {
-	calls   [][]string
-	outputs map[string]string // command line prefix -> stdout
-	missing map[string]bool   // binaries LookPath should not find
-	fail    map[string]string // command line prefix -> error text
-	paths   string            // what "qdbus <service>" with no path prints
-	out     bytes.Buffer
-	env     map[string]string
+	calls     [][]string
+	outputs   map[string]string // command line prefix -> stdout
+	missing   map[string]bool   // binaries LookPath should not find
+	fail      map[string]string // command line prefix -> error text
+	paths     string            // what "qdbus <service>" with no path prints
+	spawnFail map[string]bool   // Spawn fails when any argument starts with one of these
+	out       bytes.Buffer
+	env       map[string]string
 }
 
 func (f *fakeExec) exec() Exec {
@@ -44,6 +45,13 @@ func (f *fakeExec) exec() Exec {
 		},
 		Spawn: func(name string, args ...string) error {
 			f.calls = append(f.calls, append([]string{name}, args...))
+			for _, arg := range args {
+				for p := range f.spawnFail {
+					if strings.HasPrefix(arg, p) {
+						return errors.New("exited right away")
+					}
+				}
+			}
 			return nil
 		},
 		LookPath: func(s string) (string, error) {

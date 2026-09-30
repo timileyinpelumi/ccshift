@@ -31,8 +31,9 @@ func TestLaunchOnlyCommands(t *testing.T) {
 	q2 := `/usr/bin/claude --resume id-2 -n 'it'\''s cvx'`
 	cases := map[string][][]string{
 		"gnome-terminal": {
-			{"gnome-terminal", "--window", "--working-directory=/home/u/dev/my app", "--", "/usr/bin/claude", "--resume", "id-1", "-n", "acme · PAY-2193"},
-			{"gnome-terminal", "--tab", "--working-directory=/home/u/dev/cvx", "--", "/usr/bin/claude", "--resume", "id-2", "-n", "it's cvx"},
+			{"gnome-terminal",
+				"--window", "--working-directory=/home/u/dev/my app", "--title=acme · PAY-2193", "--command=" + q1,
+				"--tab", "--working-directory=/home/u/dev/cvx", "--title=it's cvx", "--command=" + q2},
 		},
 		"ptyxis": {
 			{"ptyxis", "--new-window", "-d", "/home/u/dev/my app", "-x", q1},
@@ -176,5 +177,21 @@ func TestKonsoleOpensOneWindowFromATabsFile(t *testing.T) {
 		"title: it's cvx;; workdir: /home/u/dev/cvx;; command: /usr/bin/claude --resume id-2 -n 'it'\\''s cvx'\n"
 	if string(b) != want {
 		t.Fatalf("tabs file:\n%s\nwant:\n%s", b, want)
+	}
+}
+
+func TestGnomeTerminalFallsBackToOneTabAtATime(t *testing.T) {
+	// --command is deprecated. If a future gnome-terminal rejects it, tabs are opened one by one.
+	f := &fakeExec{spawnFail: map[string]bool{"--command=": true}}
+	a := ByName(All(f.exec()), "gnome-terminal")
+	if err := a.OpenWindow(context.Background(), "work", twoLaunches); err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{
+		{"gnome-terminal", "--window", "--working-directory=/home/u/dev/my app", "--", "/usr/bin/claude", "--resume", "id-1", "-n", "acme · PAY-2193"},
+		{"gnome-terminal", "--tab", "--working-directory=/home/u/dev/cvx", "--", "/usr/bin/claude", "--resume", "id-2", "-n", "it's cvx"},
+	}
+	if !reflect.DeepEqual(f.calls[1:], want) {
+		t.Fatalf("calls = %q", f.calls)
 	}
 }
