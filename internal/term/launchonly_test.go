@@ -2,6 +2,7 @@ package term
 
 import (
 	"context"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -37,17 +38,14 @@ func TestLaunchOnlyCommands(t *testing.T) {
 			{"ptyxis", "--new-window", "-d", "/home/u/dev/my app", "-x", q1},
 			{"ptyxis", "--tab", "-d", "/home/u/dev/cvx", "-x", q2},
 		},
-		"konsole": {
-			{"konsole", "--workdir", "/home/u/dev/my app", "-e", "/usr/bin/claude", "--resume", "id-1", "-n", "acme · PAY-2193"},
-			{"konsole", "--new-tab", "--workdir", "/home/u/dev/cvx", "-e", "/usr/bin/claude", "--resume", "id-2", "-n", "it's cvx"},
-		},
+
 		"tilix": {
 			{"tilix", "--working-directory=/home/u/dev/my app", "--command=" + q1},
 			{"tilix", "--action=app-new-session", "--working-directory=/home/u/dev/cvx", "--command=" + q2},
 		},
 		"xfce4-terminal": {
 			{"xfce4-terminal",
-				"--window", "--working-directory=/home/u/dev/my app", "--title=acme · PAY-2193", "--command=" + q1,
+				"--working-directory=/home/u/dev/my app", "--title=acme · PAY-2193", "--command=" + q1,
 				"--tab", "--working-directory=/home/u/dev/cvx", "--title=it's cvx", "--command=" + q2},
 		},
 		"ghostty": {
@@ -162,4 +160,21 @@ func isolatedForTest(ls []Launch) []Launch {
 		out[i] = l
 	}
 	return out
+}
+
+func TestKonsoleOpensOneWindowFromATabsFile(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", t.TempDir())
+	f := openWith(t, "konsole")
+	if len(f.calls) != 1 || f.calls[0][0] != "konsole" || f.calls[0][1] != "--tabs-from-file" || f.calls[0][3] != "-e" || f.calls[0][4] != "true" {
+		t.Fatalf("calls = %q", f.calls)
+	}
+	b, err := os.ReadFile(f.calls[0][2])
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "title: acme · PAY-2193;; workdir: /home/u/dev/my app;; command: /usr/bin/claude --resume id-1 -n 'acme · PAY-2193'\n" +
+		"title: it's cvx;; workdir: /home/u/dev/cvx;; command: /usr/bin/claude --resume id-2 -n 'it'\\''s cvx'\n"
+	if string(b) != want {
+		t.Fatalf("tabs file:\n%s\nwant:\n%s", b, want)
+	}
 }

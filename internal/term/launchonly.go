@@ -3,6 +3,8 @@ package term
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -14,7 +16,7 @@ type launchOnly struct {
 	procs  []string
 	x      Exec
 	open   func(i int, l Launch) []string
-	batch  func(ls []Launch) []string
+	batch  func(ls []Launch, title string) ([]string, error)
 }
 
 func (a *launchOnly) Name() string { return a.name }
@@ -39,12 +41,15 @@ func (a *launchOnly) List(context.Context) ([]Tab, error)           { return nil
 func (a *launchOnly) SetTitle(context.Context, TabID, string) error { return ErrUnsupported }
 func (a *launchOnly) Focus(context.Context, TabID) error            { return ErrUnsupported }
 
-func (a *launchOnly) OpenWindow(_ context.Context, _ string, ls []Launch) error {
+func (a *launchOnly) OpenWindow(_ context.Context, title string, ls []Launch) error {
 	if len(ls) == 0 {
 		return nil
 	}
 	if a.batch != nil {
-		argv := a.batch(ls)
+		argv, err := a.batch(ls, title)
+		if err != nil {
+			return fmt.Errorf("%s: %w", a.name, err)
+		}
 		return a.x.Spawn(argv[0], argv[1:]...)
 	}
 	for i, l := range ls {
@@ -73,14 +78,6 @@ func pick(first bool, a, b string) string {
 
 func launchOnlyAdapters(x Exec) []Adapter {
 	return []Adapter{
-		&launchOnly{name: "konsole", tier: LaunchOnly, envKey: "KONSOLE_VERSION", procs: []string{"konsole"}, x: x,
-			open: func(i int, l Launch) []string {
-				args := []string{"konsole"}
-				if i > 0 {
-					args = append(args, "--new-tab")
-				}
-				return append(append(args, "--workdir", l.CWD, "-e"), l.Argv...)
-			}},
 		&launchOnly{name: "gnome-terminal", tier: LaunchOnly, envKey: "GNOME_TERMINAL_SCREEN", procs: []string{"gnome-terminal"}, x: x,
 			open: func(i int, l Launch) []string {
 				return append([]string{"gnome-terminal", pick(i == 0, "--window", "--tab"), "--working-directory=" + l.CWD, "--"}, l.Argv...)
@@ -90,12 +87,17 @@ func launchOnlyAdapters(x Exec) []Adapter {
 				return []string{"ptyxis", pick(i == 0, "--new-window", "--tab"), "-d", l.CWD, "-x", ShellJoin(l.Argv)}
 			}},
 		&launchOnly{name: "xfce4-terminal", tier: LaunchOnly, procs: []string{"xfce4-terminal"}, x: x,
-			batch: func(ls []Launch) []string {
+			// Options before the first --tab describe the window xfce4-terminal opens anyway.
+			// Starting with --window would open a second one.
+			batch: func(ls []Launch, _ string) ([]string, error) {
 				args := []string{"xfce4-terminal"}
 				for i, l := range ls {
-					args = append(args, pick(i == 0, "--window", "--tab"), "--working-directory="+l.CWD, "--title="+l.Title, "--command="+ShellJoin(l.Argv))
+					if i > 0 {
+						args = append(args, "--tab")
+					}
+					args = append(args, "--working-directory="+l.CWD, "--title="+l.Title, "--command="+ShellJoin(l.Argv))
 				}
-				return args
+				return args, nil
 			}},
 		&launchOnly{name: "tilix", tier: LaunchOnly, procs: []string{"tilix"}, x: x,
 			open: func(i int, l Launch) []string {
@@ -118,4 +120,17 @@ func launchOnlyAdapters(x Exec) []Adapter {
 				return append([]string{"foot", "--working-directory=" + l.CWD, "--title=" + l.Title}, l.Argv...)
 			}},
 	}
+}
+
+// cacheFile writes a file a terminal reads after ccshift has exited. One per name, overwritten each time.
+func cacheFile(name, content string) (string, error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	path := filepath.Join(dir, "ccshift", name)
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return "", err
+	}
+	return path, os.WriteFile(path, []byte(content), 0o600)
 }

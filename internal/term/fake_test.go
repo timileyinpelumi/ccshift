@@ -13,6 +13,7 @@ type fakeExec struct {
 	outputs map[string]string // command line prefix -> stdout
 	missing map[string]bool   // binaries LookPath should not find
 	fail    map[string]string // command line prefix -> error text
+	paths   string            // what "qdbus <service>" with no path prints
 	out     bytes.Buffer
 	env     map[string]string
 }
@@ -26,6 +27,9 @@ func (f *fakeExec) exec() Exec {
 			argv := append([]string{name}, args...)
 			f.calls = append(f.calls, argv)
 			line := strings.Join(argv, " ")
+			if len(argv) == 2 && strings.HasPrefix(argv[0], "qdbus") {
+				return []byte(f.paths), nil
+			}
 			for k, v := range f.fail {
 				if strings.HasPrefix(line, k) {
 					return nil, errors.New(v)

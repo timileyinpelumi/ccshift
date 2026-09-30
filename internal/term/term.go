@@ -139,7 +139,7 @@ func sameInstance(own, other map[string]string, key string) bool {
 }
 
 func All(x Exec) []Adapter {
-	as := []Adapter{&zellij{x: x}, &tmux{x: x}, &kitty{x: x}, &wezterm{x: x}}
+	as := []Adapter{&zellij{x: x}, &tmux{x: x}, &kitty{x: x}, &wezterm{x: x}, &konsole{x: x}}
 	as = append(as, launchOnlyAdapters(x)...)
 	return append(as, &generic{x: x})
 }
