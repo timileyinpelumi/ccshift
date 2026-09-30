@@ -44,3 +44,19 @@ func TestLastAITitle(t *testing.T) {
 		t.Fatalf("missing file: %q", got)
 	}
 }
+
+func TestLastModel(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "t.jsonl")
+	os.WriteFile(p, []byte(`{"type":"assistant","message":{"model":"claude-haiku-4-5-20251001","content":[]}}
+{"type":"assistant","message":{"model":"claude-opus-5-5","content":[]}}
+{"type":"assistant","isSidechain":true,"message":{"model":"claude-haiku-4-5-20251001","content":[]}}
+{"type":"assistant","message":{"model":"<synthetic>","content":[]}}
+{"type":"user","message":{"content":"hi"}}
+`), 0o644)
+	if got := LastModel(p); got != "claude-opus-5-5" {
+		t.Fatalf("got %q", got)
+	}
+	if got := LastModel(filepath.Join(t.TempDir(), "none")); got != "" {
+		t.Fatalf("missing file: %q", got)
+	}
+}

@@ -352,3 +352,17 @@ func TestHandoffCloseOldWithoutATab(t *testing.T) {
 		t.Fatalf("closed=%v out=%q", closed, out)
 	}
 }
+
+func TestHandoffKeepsTheOldSessionsModel(t *testing.T) {
+	h, _ := handoffApp(t)
+	p := filepath.Join(h.projects, "-w-api", "s1.jsonl")
+	f, _ := os.OpenFile(p, os.O_APPEND|os.O_WRONLY, 0o644)
+	f.WriteString(`{"type":"assistant","message":{"model":"claude-opus-5-5","content":[{"type":"text","text":"ok"}]}}` + "\n")
+	f.Close()
+	h.must(t, "handoff", "1")
+	argv := h.term.opened[0][0].Argv
+	want := []string{"/bin/claude", "--session-id", "new-id", "--name=api work (2)", "--model", "claude-opus-5-5"}
+	if len(argv) != 7 || !reflect.DeepEqual(argv[:6], want) || !strings.HasPrefix(argv[6], "Read ") {
+		t.Fatalf("argv = %q", argv)
+	}
+}

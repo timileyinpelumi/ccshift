@@ -75,3 +75,37 @@ func LastAITitle(transcriptPath string) string {
 	}
 	return ""
 }
+
+// LastModel returns the model of the latest main-thread reply in a transcript, or "" if unknown.
+func LastModel(transcriptPath string) string {
+	f, err := os.Open(transcriptPath)
+	if err != nil {
+		return ""
+	}
+	defer f.Close()
+	if fi, err := f.Stat(); err == nil && fi.Size() > usageTail {
+		f.Seek(-usageTail, io.SeekEnd)
+	}
+	b, err := io.ReadAll(f)
+	if err != nil {
+		return ""
+	}
+	lines := bytes.Split(b, []byte("\n"))
+	for i := len(lines) - 1; i >= 0; i-- {
+		var rec struct {
+			Type        string `json:"type"`
+			IsSidechain bool   `json:"isSidechain"`
+			Message     struct {
+				Model string `json:"model"`
+			} `json:"message"`
+		}
+		if json.Unmarshal(lines[i], &rec) != nil || rec.Type != "assistant" || rec.IsSidechain {
+			continue
+		}
+		// Claude Code writes "<synthetic>" for messages it made up itself, such as error notices.
+		if m := rec.Message.Model; m != "" && m[0] != '<' {
+			return m
+		}
+	}
+	return ""
+}

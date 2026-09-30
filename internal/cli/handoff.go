@@ -148,10 +148,14 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 		}
 	}
 	newName := handoff.NextName(src.name, func(n string) bool { return taken[n] })
-	launch := term.Launch{
-		CWD: src.cwd, Title: newName,
-		Argv: []string{a.ClaudeBin, "--session-id", newID, "--name=" + newName, "Read " + briefPath + " and continue from it."},
+	argv := []string{a.ClaudeBin, "--session-id", newID, "--name=" + newName}
+	// The new session runs on the model the old one was using, not the user's default.
+	if transcript, ok := a.Claude.TranscriptPath(src.id); ok {
+		if m := claude.LastModel(transcript); m != "" {
+			argv = append(argv, "--model", m)
+		}
 	}
+	launch := term.Launch{CWD: src.cwd, Title: newName, Argv: append(argv, "Read "+briefPath+" and continue from it.")}
 	opener, canPlace := v.adapter.(term.TabOpener)
 	if canPlace && src.matched {
 		err = opener.OpenTab(ctx, src.tab, isolated([]term.Launch{launch})[0])
