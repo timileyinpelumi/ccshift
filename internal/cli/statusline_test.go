@@ -136,3 +136,26 @@ func stopInput(id, transcript string) string {
 	b, _ := json.Marshal(map[string]string{"session_id": id, "transcript_path": transcript})
 	return string(b)
 }
+
+func TestAutoHandoffAtTheLastThreshold(t *testing.T) {
+	h := testApp(t, term.Exact)
+	h.app.Config.AutoHandoff = true
+	h.app.Executable = "/bin/ccshift"
+	var started [][]string
+	h.app.Detach = func(argv []string) error { started = append(started, argv); return nil }
+	var notes []string
+	h.app.Notify = func(_, body string) { notes = append(notes, body) }
+	for _, pct := range []float64{50, 72, 86, 88, 90} {
+		h.status(t, statusJSON("s1-abcdef", "api", pct))
+	}
+	if len(started) != 1 || strings.Join(started[0], " ") != "/bin/ccshift handoff s1-abcdef --auto" {
+		t.Fatalf("started = %q", started)
+	}
+	if len(notes) != 2 || !strings.Contains(notes[1], "Handing api off") {
+		t.Fatalf("notes = %q", notes)
+	}
+	// Off by default.
+	h2 := testApp(t, term.Exact)
+	h2.app.Detach = func(argv []string) error { t.Fatal("started without auto_handoff"); return nil }
+	h2.status(t, statusJSON("s2", "web", 90))
+}

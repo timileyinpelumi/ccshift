@@ -30,6 +30,7 @@ type Config struct {
 	BriefModel              string              `toml:"brief_model"`
 	SupportNote             bool                `toml:"support_note"`
 	AutoUpdate              bool                `toml:"auto_update"`
+	AutoHandoff             bool                `toml:"auto_handoff"`
 }
 
 // NameRules says what counts as a ticket id inside a branch name, in any letter case.

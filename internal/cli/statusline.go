@@ -142,7 +142,12 @@ func (a *App) recordContext(id, name string, pct float64, size int, source strin
 		if label == "" {
 			label, _ = a.savedName(id)
 		}
-		a.Notify("ccshift", fmt.Sprintf("%s is at %d%% of its context window. Hand it off with: ccshift handoff %s", label, int(pct), term.ShellJoin([]string{label})))
+		last := a.Config.WarnThresholds[len(a.Config.WarnThresholds)-1]
+		if a.Config.AutoHandoff && slices.Contains(fresh, last) {
+			a.autoHandoff(id, label)
+		} else {
+			a.Notify("ccshift", fmt.Sprintf("%s is at %d%% of its context window. Hand it off with: ccshift handoff %s", label, int(pct), term.ShellJoin([]string{label})))
+		}
 	}
 	return nil
 }
@@ -206,4 +211,17 @@ func contextCell(e storeContext, known bool, thresholds []int) string {
 		s += "!"
 	}
 	return s
+}
+
+// autoHandoff starts "ccshift handoff" in the background when a session crosses the last warning
+// threshold. It runs detached because writing the brief takes a minute and the statusline must not wait.
+func (a *App) autoHandoff(id, label string) {
+	if _, done := a.superseded()[id]; done {
+		return
+	}
+	if err := a.Detach([]string{a.Executable, "handoff", id, "--auto"}); err != nil {
+		a.Store.Log("auto handoff of %s: %v", label, err)
+		return
+	}
+	a.Notify("ccshift", fmt.Sprintf("Handing %s off to a fresh session. The new tab opens when the brief is written.", label))
 }

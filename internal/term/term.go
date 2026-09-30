@@ -182,3 +182,13 @@ func ByName(as []Adapter, name string) Adapter {
 	}
 	return nil
 }
+
+// Start runs a command in the background, detached from ccshift, and does not wait for it.
+func Start(argv []string) error {
+	cmd := exec.Command(argv[0], argv[1:]...)
+	detach(cmd)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	return cmd.Process.Release()
+}

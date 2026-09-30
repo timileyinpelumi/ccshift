@@ -93,6 +93,7 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	closeOld := fs.Bool("close-old", false, "close the old session's tab once the new one is open")
 	noLaunch := fs.Bool("no-launch", false, "write the brief and stop")
 	reuse := fs.Bool("reuse", false, "use the brief already written for this session")
+	auto := fs.Bool("auto", false, "started by the context warning: write progress to the log")
 	model := fs.String("model", "", "model that writes the brief")
 	termName := fs.String("terminal", "", "terminal adapter to use instead of detecting it")
 	pos, err := parseArgs(fs, args)
@@ -105,6 +106,10 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	spec := "."
 	if len(pos) == 1 {
 		spec = pos[0]
+	}
+	if *auto {
+		a.Out, a.Err = logWriter{a.Store}, logWriter{a.Store}
+		*edit = false
 	}
 	v, err := a.view(ctx, *termName)
 	if err != nil {
