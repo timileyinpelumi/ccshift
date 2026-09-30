@@ -221,7 +221,7 @@ func TestResumedSessionLosesItsTombstoneEvenIfAutosaveFails(t *testing.T) {
 func TestWarningHasHysteresis(t *testing.T) {
 	h := testApp(t, term.Exact)
 	var notes []string
-	h.app.Notify = func(_, body string) { notes = append(notes, body) }
+	h.app.Notify = func(_, body string, _ []string) { notes = append(notes, body) }
 	for _, pct := range []float64{72, 69, 71, 68, 73} {
 		h.status(t, statusJSON("s1", "api", pct))
 	}

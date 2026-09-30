@@ -62,7 +62,7 @@ func (a *App) handoffSource(spec string, v *view) (handoffSource, error) {
 			if live[e.SessionID] {
 				continue
 			}
-			if strings.EqualFold(e.Name, spec) || (len(spec) >= 4 && strings.HasPrefix(e.SessionID, spec)) {
+			if strings.EqualFold(e.Name, spec) || (len(spec) == 3 && strings.EqualFold(target.Code(e.SessionID), spec)) || (len(spec) >= 4 && strings.HasPrefix(e.SessionID, spec)) {
 				if _, seen := found[e.SessionID]; !seen {
 					found[e.SessionID] = handoffSource{id: e.SessionID, name: layout.Title(e), cwd: e.CWD, workspace: ws, agent: e.Agent}
 				}

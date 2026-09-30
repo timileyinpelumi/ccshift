@@ -9,7 +9,7 @@ import (
 
 	"github.com/timileyinpelumi/ccshift/internal/claude"
 	"github.com/timileyinpelumi/ccshift/internal/layout"
-	"github.com/timileyinpelumi/ccshift/internal/term"
+	"github.com/timileyinpelumi/ccshift/internal/target"
 )
 
 const (
@@ -146,7 +146,8 @@ func (a *App) recordContext(id, name string, pct float64, size int, source strin
 		if a.Config.AutoHandoff && slices.Contains(fresh, last) {
 			a.autoHandoff(id, label)
 		} else {
-			a.Notify("ccshift", fmt.Sprintf("%s is at %d%% of its context window. Hand it off with: ccshift handoff %s", label, int(pct), term.ShellJoin([]string{label})))
+			body := fmt.Sprintf("%s is at %d%% of its context window. Hand it off with: ccshift handoff %s", label, int(pct), target.Code(id))
+			a.Notify("ccshift", body, []string{a.Executable, "handoff", id, "--auto"})
 		}
 	}
 	return nil
@@ -223,5 +224,5 @@ func (a *App) autoHandoff(id, label string) {
 		a.Store.Log("auto handoff of %s: %v", label, err)
 		return
 	}
-	a.Notify("ccshift", fmt.Sprintf("Handing %s off to a fresh session. The new tab opens when the brief is written.", label))
+	a.Notify("ccshift", fmt.Sprintf("Handing %s off to a fresh session. The new tab opens when the brief is written.", label), nil)
 }

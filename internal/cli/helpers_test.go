@@ -151,7 +151,7 @@ func testApp(t *testing.T, tier term.Tier) *harness {
 		ClaudeBin:  "/bin/claude",
 		Now:        func() time.Time { return testNow },
 		Editor:     func(string) error { return nil },
-		Notify:     func(string, string) {},
+		Notify:     func(string, string, []string) {},
 		HasCommand: func(string) bool { return true },
 		Shell:      func(context.Context, string, []byte) ([]byte, error) { return nil, nil },
 	}

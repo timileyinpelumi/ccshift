@@ -9,6 +9,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/timileyinpelumi/ccshift/internal/target"
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
@@ -214,11 +215,16 @@ func TestHandoffWhenTheTerminalCannotOpenATab(t *testing.T) {
 
 func TestContextWarningPointsAtHandoff(t *testing.T) {
 	h := testApp(t, term.Exact)
+	h.app.Executable = "/bin/ccshift"
 	var notes []string
-	h.app.Notify = func(_, body string) { notes = append(notes, body) }
+	var clicks [][]string
+	h.app.Notify = func(_, body string, click []string) { notes = append(notes, body); clicks = append(clicks, click) }
 	h.status(t, statusJSON("s1", "api work", 72))
-	if len(notes) != 1 || !strings.Contains(notes[0], `ccshift handoff 'api work'`) {
+	if len(notes) != 1 || !strings.Contains(notes[0], "ccshift handoff "+target.Code("s1")) {
 		t.Fatalf("notes = %q", notes)
+	}
+	if strings.Join(clicks[0], " ") != "/bin/ccshift handoff s1 --auto" {
+		t.Fatalf("click = %q", clicks[0])
 	}
 }
 

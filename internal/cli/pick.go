@@ -10,6 +10,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/timileyinpelumi/ccshift/internal/layout"
+	"github.com/timileyinpelumi/ccshift/internal/target"
 	cterm "github.com/timileyinpelumi/ccshift/internal/term"
 )
 
@@ -47,7 +48,7 @@ func (m *pickModel) visible() []int {
 	var out []int
 	q := strings.ToLower(m.query)
 	for i, it := range m.items {
-		if q == "" || fuzzy(strings.ToLower(it.name+" "+it.cwd), q) {
+		if q == "" || fuzzy(strings.ToLower(it.name+" "+it.cwd), q) || strings.EqualFold(target.Code(it.id), q) {
 			out = append(out, i)
 		}
 	}
@@ -226,9 +227,10 @@ func (a *App) drawPicker(m *pickModel) {
 	}
 	for i := start; i < len(vis) && i < start+room; i++ {
 		it := m.items[vis[i]]
-		line := fmt.Sprintf(" %-34s \033[2m%s\033[0m", cterm.Truncate(it.name, 34), it.detail)
+		code := target.Code(it.id)
+		line := fmt.Sprintf(" \033[2m%s\033[0m  %-34s \033[2m%s\033[0m", code, cterm.Truncate(it.name, 34), it.detail)
 		if i == m.sel {
-			line = "\033[7m" + fmt.Sprintf(" %-34s %s", cterm.Truncate(it.name, 34), it.detail) + "\033[0m"
+			line = "\033[7m" + fmt.Sprintf(" %s  %-34s %s", code, cterm.Truncate(it.name, 34), it.detail) + "\033[0m"
 		}
 		b.WriteString(line + "\r\n")
 	}

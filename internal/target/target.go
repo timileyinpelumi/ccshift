@@ -33,6 +33,7 @@ func Resolve(spec string, items []layout.Item, selfAncestors []int) (layout.Item
 	}
 	lower := strings.ToLower(spec)
 	matchers := []func(layout.Item) bool{
+		func(it layout.Item) bool { return len(spec) == 3 && strings.EqualFold(Code(it.Session.ID), spec) },
 		func(it layout.Item) bool { return strings.ToLower(it.Session.Name) == lower },
 		func(it layout.Item) bool { return strings.HasPrefix(strings.ToLower(it.Session.Name), lower) },
 		func(it layout.Item) bool { return len(spec) >= 4 && strings.HasPrefix(it.Session.ID, spec) },

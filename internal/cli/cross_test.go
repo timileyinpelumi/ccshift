@@ -26,7 +26,7 @@ func TestHookRecordsTheSessionsTabForSystemsThatCannotReadIt(t *testing.T) {
 	h.app.EnvOf = func(int) (map[string]string, error) { return nil, errors.New("not supported on this operating system") }
 	out := h.must(t, "ls")
 	lines := strings.Split(strings.TrimSpace(out), "\n")
-	if !strings.HasPrefix(lines[1], "1  two") || !strings.HasSuffix(strings.TrimSpace(lines[1]), "fake:1") {
+	if f := strings.Fields(lines[1]); f[0] != "1" || f[2] != "two" || f[len(f)-1] != "fake:1" {
 		t.Fatalf("tab order should come from the recorded environment:\n%s", out)
 	}
 	var rec map[string]map[string]string

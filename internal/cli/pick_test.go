@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/timileyinpelumi/ccshift/internal/target"
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
@@ -64,5 +65,13 @@ func TestPickItemsIncludeSavedSessions(t *testing.T) {
 	items := h.app.pickItems(v)
 	if len(items) != 2 || items[0].id != "s1" || !strings.Contains(items[0].detail, "running") || items[1].id != "s9" || !strings.Contains(items[1].detail, "saved") {
 		t.Fatalf("items = %+v", items)
+	}
+}
+
+func TestPickFindsASessionByCode(t *testing.T) {
+	m := &pickModel{items: []pickItem{{id: "s1-abcdef", name: "api"}, {id: "s2-abcdef", name: "web"}}}
+	m.query = strings.ToLower(target.Code("s2-abcdef"))
+	if v := m.visible(); len(v) != 1 || m.items[v[0]].name != "web" {
+		t.Fatalf("visible = %v", v)
 	}
 }

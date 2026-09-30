@@ -61,7 +61,8 @@ type App struct {
 	Detach       func(argv []string) error
 	Executable   string
 	HasCommand   func(name string) bool
-	Notify       func(title, body string)
+	NotifySend   func(args []string) (string, error)
+	Notify       func(title, body string, onClick []string) // onClick runs when the notification is clicked, where the desktop allows it
 	Shell        func(ctx context.Context, command string, stdin []byte) ([]byte, error)
 }
 
@@ -97,7 +98,7 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), AgentHomes: defaultAgentHomes(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
+		NotifySend: notifySend, Notify: func(title, body string, onClick []string) { notify(exe, title, body, onClick) }, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), AgentHomes: defaultAgentHomes(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
 		Releases: update.Releases{Base: update.DefaultBase, OS: runtime.GOOS, Arch: runtime.GOARCH}, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}
@@ -142,6 +143,7 @@ func (a *App) commands() []command {
 		{"exec", "run a command outside any Claude session (used by restore on Windows)", (*App).cmdExec},
 		{"hook", "called by Claude Code hooks", (*App).cmdHook},
 		{"statusline", "called by Claude Code as the status line command", (*App).cmdStatusline},
+		{"notify", "shows a notification and runs a command when it is clicked", (*App).cmdNotify},
 		{"version", "print the version", func(a *App, _ context.Context, _ []string) error {
 			fmt.Fprintln(a.Out, version)
 			return nil
@@ -151,7 +153,7 @@ func (a *App) commands() []command {
 
 // quiet commands never trigger an automatic update: they are run by Claude Code, change the
 // binary themselves, or print output meant for another program.
-var quiet = map[string]bool{"hook": true, "statusline": true, "exec": true, "update": true, "uninstall": true, "version": true}
+var quiet = map[string]bool{"hook": true, "statusline": true, "notify": true, "exec": true, "update": true, "uninstall": true, "version": true}
 
 type command struct {
 	name    string

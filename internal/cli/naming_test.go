@@ -29,9 +29,11 @@ func namedSessions(h *harness) {
 func lsNames(t *testing.T, h *harness) []string {
 	t.Helper()
 	var out []string
-	for _, line := range strings.Split(strings.TrimSpace(h.must(t, "ls")), "\n")[1:] {
-		f := strings.SplitN(line, "  ", 3)
-		out = append(out, strings.TrimSpace(f[1]))
+	lines := strings.Split(strings.TrimSpace(h.must(t, "ls")), "\n")
+	// The header is ASCII, so its byte offsets are rune offsets into the rows.
+	from, to := strings.Index(lines[0], "NAME"), strings.Index(lines[0], "WORKSPACE")
+	for _, line := range lines[1:] {
+		out = append(out, strings.TrimSpace(string([]rune(line)[from:to])))
 	}
 	return out
 }

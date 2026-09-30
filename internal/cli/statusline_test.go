@@ -77,7 +77,7 @@ func TestStatuslineNeverFails(t *testing.T) {
 func TestContextWarningFiresOncePerThreshold(t *testing.T) {
 	h := testApp(t, term.Exact)
 	var notes []string
-	h.app.Notify = func(title, body string) { notes = append(notes, body) }
+	h.app.Notify = func(title, body string, _ []string) { notes = append(notes, body) }
 	for _, pct := range []float64{50, 72, 74, 86, 88} {
 		h.status(t, statusJSON("s1", "api", pct))
 	}
@@ -105,7 +105,7 @@ func TestLsShowsContext(t *testing.T) {
 func TestStopHookEstimatesContextFromTranscript(t *testing.T) {
 	h := testApp(t, term.Exact)
 	var notes []string
-	h.app.Notify = func(_, body string) { notes = append(notes, body) }
+	h.app.Notify = func(_, body string, _ []string) { notes = append(notes, body) }
 	p := filepath.Join(t.TempDir(), "s1.jsonl")
 	os.WriteFile(p, []byte(`{"type":"assistant","message":{"usage":{"input_tokens":1000,"cache_read_input_tokens":149000}}}`+"\n"), 0o644)
 	h.sessions = twoSessions()
@@ -144,7 +144,7 @@ func TestAutoHandoffAtTheLastThreshold(t *testing.T) {
 	var started [][]string
 	h.app.Detach = func(argv []string) error { started = append(started, argv); return nil }
 	var notes []string
-	h.app.Notify = func(_, body string) { notes = append(notes, body) }
+	h.app.Notify = func(_, body string, _ []string) { notes = append(notes, body) }
 	for _, pct := range []float64{50, 72, 86, 88, 90} {
 		h.status(t, statusJSON("s1-abcdef", "api", pct))
 	}

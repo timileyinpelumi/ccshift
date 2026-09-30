@@ -17,6 +17,7 @@ import (
 
 	"github.com/timileyinpelumi/ccshift/internal/names"
 	"github.com/timileyinpelumi/ccshift/internal/proc"
+	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
 func comms(pids []int) []string {
@@ -93,7 +94,7 @@ func runEditor(path string) error {
 }
 
 // notify shows a desktop notification with whatever the system provides. It never waits or fails.
-func notify(title, body string) {
+func notify(exe, title, body string, onClick []string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "darwin":
@@ -106,15 +107,23 @@ func notify(title, body string) {
 		if err != nil {
 			return
 		}
-		args := []string{"--app-name=ccshift", title, body}
-		if icon := notifyIcon(); icon != "" {
-			args = append([]string{"--icon=" + icon}, args...)
+		// Waiting for a click lasts as long as the notification is up, so a detached ccshift does it.
+		if len(onClick) > 0 && exe != "" && term.Start(append([]string{exe, "notify", title, body, "--"}, onClick...)) == nil {
+			return
 		}
-		cmd = exec.Command(path, args...)
+		cmd = exec.Command(path, notifyArgs(title, body)...)
 	}
 	if cmd.Start() == nil {
 		go cmd.Wait()
 	}
+}
+
+func notifyArgs(title, body string) []string {
+	args := []string{"--app-name=ccshift", title, body}
+	if icon := notifyIcon(); icon != "" {
+		args = append([]string{"--icon=" + icon}, args...)
+	}
+	return args
 }
 
 //go:embed icon.png

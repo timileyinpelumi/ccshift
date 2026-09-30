@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/timileyinpelumi/ccshift/internal/target"
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
@@ -22,8 +23,8 @@ func TestLsOrdersByTab(t *testing.T) {
 	if len(lines) != 4 {
 		t.Fatalf("output:\n%s", out)
 	}
-	for i, want := range []string{"1  web", "2  api", "3  home"} {
-		if !strings.HasPrefix(lines[i+1], want) {
+	for i, want := range [][2]string{{"1", "web"}, {"2", "api"}, {"3", "home"}} {
+		if f := strings.Fields(lines[i+1]); f[0] != want[0] || f[2] != want[1] {
 			t.Errorf("line %d = %q, want prefix %q", i+1, lines[i+1], want)
 		}
 	}
@@ -50,5 +51,19 @@ func TestLsJSONAndEmpty(t *testing.T) {
 	}
 	if got.Terminal != "fake" || len(got.Sessions) != 1 || got.Sessions[0].SessionID != "s1" {
 		t.Fatalf("json = %+v", got)
+	}
+}
+
+func TestLsShowsSessionCodes(t *testing.T) {
+	h := testApp(t, term.Exact)
+	h.term.tabs = []term.Tab{{ID: "p1"}}
+	h.sessions = []liveSession{{id: "s1-abcdef", cwd: "/w/api", name: "api", pane: "p1", pid: 1}}
+	out := h.must(t, "ls")
+	if !strings.Contains(out, "CODE") || !strings.Contains(out, target.Code("s1-abcdef")) {
+		t.Fatalf("ls:\n%s", out)
+	}
+	h.must(t, "focus", strings.ToLower(target.Code("s1-abcdef")))
+	if len(h.term.focused) != 1 {
+		t.Fatal("focus by code did not switch")
 	}
 }

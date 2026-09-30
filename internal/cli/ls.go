@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"text/tabwriter"
 	"time"
+
+	"github.com/timileyinpelumi/ccshift/internal/target"
 )
 
 type lsRow struct {
 	Pos       int    `json:"position"`
+	Code      string `json:"code"`
 	Name      string `json:"name"`
 	Workspace string `json:"workspace,omitempty"`
 	Branch    string `json:"branch,omitempty"`
@@ -99,9 +102,9 @@ func (a *App) cmdLs(ctx context.Context, args []string) error {
 		return nil
 	}
 	tw := tabwriter.NewWriter(a.Out, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(tw, "#\tNAME\tWORKSPACE\tBRANCH\tSTATUS\tCTX\tAGE\tTAB")
+	fmt.Fprintln(tw, "#\tCODE\tNAME\tWORKSPACE\tBRANCH\tSTATUS\tCTX\tAGE\tTAB")
 	for _, r := range rows {
-		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", r.Pos, r.Name, r.Workspace, dash(r.Branch), dash(r.Status), r.Context, r.Age, r.Tab)
+		fmt.Fprintf(tw, "%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", r.Pos, target.Code(r.SessionID), r.Name, r.Workspace, dash(r.Branch), dash(r.Status), r.Context, r.Age, r.Tab)
 	}
 	tw.Flush()
 	if len(bg) > 0 {
