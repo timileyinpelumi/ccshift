@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 )
@@ -69,5 +70,29 @@ func TestFailedFlushKeepsEvents(t *testing.T) {
 	}
 	if n != 1 {
 		t.Fatalf("queued events = %d", n)
+	}
+}
+
+func TestConcurrentFlushesSendOnce(t *testing.T) {
+	var mu sync.Mutex
+	sent := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(50 * time.Millisecond)
+		mu.Lock()
+		sent++
+		mu.Unlock()
+		w.WriteHeader(204)
+	}))
+	defer srv.Close()
+	c := client(t, srv.URL)
+	c.Record(Event{Command: "ws"})
+	var wg sync.WaitGroup
+	for range 4 {
+		wg.Add(1)
+		go func() { defer wg.Done(); c.Flush(context.Background()) }()
+	}
+	wg.Wait()
+	if sent != 1 {
+		t.Fatalf("sent %d times", sent)
 	}
 }

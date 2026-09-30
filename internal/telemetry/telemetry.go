@@ -26,6 +26,7 @@ const (
 	sendingFile = "telemetry.sending.jsonl"
 	stampFile   = "telemetry.last"
 	idFile      = "install-id"
+	lockFile    = "telemetry.lock"
 	maxQueue    = 256 << 10
 	every       = 24 * time.Hour
 	retry       = time.Hour
@@ -119,6 +120,17 @@ func (c *Client) stamp(result string) {
 
 // Flush sends everything queued. New events recorded while it runs go to a fresh queue.
 func (c *Client) Flush(ctx context.Context) error {
+	// One sender at a time, or two would post the same events. A lock older than a minute is left over from a crash.
+	lock := filepath.Join(c.Dir, lockFile)
+	if fi, err := os.Stat(lock); err == nil && time.Since(fi.ModTime()) > time.Minute {
+		os.Remove(lock)
+	}
+	f, err := os.OpenFile(lock, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return nil
+	}
+	f.Close()
+	defer os.Remove(lock)
 	queue, sending := filepath.Join(c.Dir, queueFile), filepath.Join(c.Dir, sendingFile)
 	if _, err := os.Stat(sending); errors.Is(err, fs.ErrNotExist) {
 		if err := os.Rename(queue, sending); err != nil && !errors.Is(err, fs.ErrNotExist) {
