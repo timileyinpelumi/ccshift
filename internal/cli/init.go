@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/timileyinpelumi/ccshift/internal/config"
@@ -57,7 +58,16 @@ func (a *App) installed(f *settings.File) bool {
 	return false
 }
 
+// command is the line written into settings.json. On Windows the path uses forward slashes, which
+// Git Bash, cmd and PowerShell all accept, and is double-quoted only when it has a space in it.
 func (a *App) command(args string) string {
+	if goos == "windows" {
+		exe := strings.ReplaceAll(a.Executable, `\`, "/")
+		if strings.Contains(exe, " ") {
+			exe = `"` + exe + `"`
+		}
+		return exe + " " + args
+	}
 	return term.ShellJoin([]string{a.Executable}) + " " + args
 }
 

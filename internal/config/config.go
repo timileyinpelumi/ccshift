@@ -108,11 +108,12 @@ func Load(path string) (Config, error) {
 }
 
 func (c Config) WorkspaceFor(cwd string) string {
+	cwd = filepath.Clean(cwd)
 	best, bestLen := DefaultWorkspace, -1
 	for ws, prefixes := range c.Workspaces {
 		for _, p := range prefixes {
 			p = filepath.Clean(expandHome(p))
-			if cwd != p && !strings.HasPrefix(cwd, p+"/") {
+			if cwd != p && !strings.HasPrefix(cwd, p+string(filepath.Separator)) {
 				continue
 			}
 			if len(p) > bestLen || (len(p) == bestLen && ws < best) {

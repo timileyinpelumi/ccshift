@@ -59,3 +59,21 @@ func TestExecRunsTheCommand(t *testing.T) {
 		t.Fatalf("exit = %d", code)
 	}
 }
+
+func TestHookCommandOnWindows(t *testing.T) {
+	old := goos
+	goos = "windows"
+	defer func() { goos = old }()
+	h := testApp(t, term.Exact)
+	h.app.Executable = `C:\Users\u\AppData\Local\Programs\ccshift\ccshift.exe`
+	if got := h.app.command("hook stop"); got != "C:/Users/u/AppData/Local/Programs/ccshift/ccshift.exe hook stop" {
+		t.Fatalf("command = %q", got)
+	}
+	if !h.app.ours(h.app.command("hook stop")) || !h.app.ours(`"C:/Program Files/ccshift.exe" statusline`) {
+		t.Fatal("ccshift's own Windows commands should be recognised")
+	}
+	h.app.Executable = `C:\Users\first last\ccshift.exe`
+	if got := h.app.command("statusline"); got != `"C:/Users/first last/ccshift.exe" statusline` {
+		t.Fatalf("command = %q", got)
+	}
+}

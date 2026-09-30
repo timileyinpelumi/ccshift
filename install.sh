@@ -14,7 +14,11 @@ main() {
 	dir="${CCSHIFT_INSTALL_DIR:-$HOME/.local/bin}"
 	version="${CCSHIFT_VERSION:-latest}"
 
-	[ "$(uname -s)" = "Linux" ] || fail "ccshift runs on Linux only (this is $(uname -s))."
+	case "$(uname -s)" in
+		Linux) os=linux ;;
+		Darwin) os=darwin ;;
+		*) fail "no build for $(uname -s). On Windows use install.ps1: https://github.com/$repo#install" ;;
+	esac
 	case "$(uname -m)" in
 		x86_64 | amd64) arch=amd64 ;;
 		aarch64 | arm64) arch=arm64 ;;
@@ -29,7 +33,7 @@ main() {
 	else
 		base="https://github.com/$repo/releases/download/$version"
 	fi
-	asset="ccshift_linux_$arch.tar.gz"
+	asset="ccshift_${os}_$arch.tar.gz"
 	tmp=$(mktemp -d)
 	trap 'rm -rf "$tmp"' EXIT
 
