@@ -21,6 +21,8 @@ ccshift saves every Claude Code session you have open, in the order of their tab
 
 Website: https://www.timileyin.dev/ccshift
 
+If ccshift is useful to you, a star on GitHub helps other people find it.
+
 ## Contents
 
 - [Install](#install)
