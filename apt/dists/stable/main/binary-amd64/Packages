@@ -1,0 +1,16 @@
+Package: ccshift
+Architecture: amd64
+Version: 0.4.1
+Priority: optional
+Section: utils
+Maintainer: Timileyin Pelumi <hello@timileyin.dev>
+Installed-Size: 7204
+Filename: pool/main/c/ccshift/ccshift_amd64.deb
+Size: 3135982
+MD5sum: f6136143d7b7c4fadea0c6363f0f755f
+SHA1: 97468e6bc1542e3d02851ffd55da316d19367f3c
+SHA256: 4a115651a0bb2887a3201f68da5fa7b668e75531433e0b707c1c2baed9225b34
+SHA512: 9de286c60e29d91c3daa04b02d396dd5197df2564a87e267638f000f05c256224ce4b2948d2e1c0854105ccf4af09ca55ff243ea418308feb0be1139e24b03da
+Homepage: https://www.timileyin.dev/ccshift
+Description: Save, restore, name and hand off Claude Code sessions across Linux terminals.
+
