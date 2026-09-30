@@ -5,7 +5,7 @@ Priority: optional
 Section: utils
 Maintainer: Timileyin Pelumi <hello@timileyin.dev>
 Installed-Size: 7204
-Filename: pool/main/c/ccshift/ccshift_amd64.deb
+Filename: pool/main/c/ccshift/ccshift_0.4.1_amd64.deb
 Size: 3135982
 MD5sum: f6136143d7b7c4fadea0c6363f0f755f
 SHA1: 97468e6bc1542e3d02851ffd55da316d19367f3c
