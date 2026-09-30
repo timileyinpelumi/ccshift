@@ -33,7 +33,7 @@ In v1:
 - `ls`, `focus`, workspaces
 - context warning
 - `init`, `init --remove`, `doctor`
-- terminals: tmux, kitty, WezTerm, zellij, Konsole (see open items), gnome-terminal, Ptyxis, xfce4-terminal, Tilix, Ghostty, Alacritty, foot, and a generic fallback
+- terminals: tmux, kitty, WezTerm, zellij, Konsole, gnome-terminal, Ptyxis, xfce4-terminal, Tilix, Ghostty, Alacritty, foot, and a generic fallback
 - one-time import of `~/.claude/saved-sessions` from the old scripts
 
 Not in v1:

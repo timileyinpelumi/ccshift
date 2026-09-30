@@ -203,3 +203,11 @@ func TestDoctor(t *testing.T) {
 		t.Fatalf("missing binary should be a problem:\n%s", h.out)
 	}
 }
+
+func TestDoctorSaysWhenClaudeIsMissing(t *testing.T) {
+	h, _ := initApp(t, userSettings)
+	h.app.HasCommand = func(name string) bool { return name != h.app.ClaudeBin }
+	if code := h.run("doctor"); code != 1 || !strings.Contains(h.out.String(), "problem  Claude Code is installed") {
+		t.Fatalf("exit %d:\n%s", code, h.out)
+	}
+}

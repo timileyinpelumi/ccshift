@@ -277,6 +277,8 @@ func (a *App) cmdDoctor(ctx context.Context, args []string) error {
 		fmt.Fprintf(a.Out, "problem  %s\n         %s\n", what, fix)
 	}
 
+	report(a.HasCommand(a.ClaudeBin), "Claude Code is installed", "the claude command was not found on your PATH; ccshift works on top of Claude Code")
+
 	_, err := a.Claude.Live(ctx)
 	report(err == nil, "Claude sessions can be read", fmt.Sprintf("claude agents --json failed and no session files were found: %v", err))
 
