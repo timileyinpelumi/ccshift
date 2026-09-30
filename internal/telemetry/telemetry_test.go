@@ -96,3 +96,24 @@ func TestConcurrentFlushesSendOnce(t *testing.T) {
 		t.Fatalf("sent %d times", sent)
 	}
 }
+
+func TestFlushIncludesThePlatform(t *testing.T) {
+	var got payload
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		json.Unmarshal(b, &got)
+		w.WriteHeader(204)
+	}))
+	defer srv.Close()
+	c := client(t, srv.URL)
+	c.Describe = func(context.Context) Platform {
+		return Platform{OSVersion: "Ubuntu 24.04", ClaudeVersion: "2.1.3", WSL: true, Shell: "zsh"}
+	}
+	c.Record(Event{Command: "ls"})
+	if err := c.Flush(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got.OSVersion != "Ubuntu 24.04" || got.ClaudeVersion != "2.1.3" || !got.WSL || got.Shell != "zsh" {
+		t.Fatalf("got %+v", got)
+	}
+}

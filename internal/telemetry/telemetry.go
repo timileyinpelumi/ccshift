@@ -44,17 +44,27 @@ type Event struct {
 	MS       int    `json:"ms,omitempty"`
 }
 
+// Platform describes the machine once per send: no hardware, model or host names.
+type Platform struct {
+	OSVersion     string `json:"os_version,omitempty"`
+	ClaudeVersion string `json:"claude_version,omitempty"`
+	WSL           bool   `json:"wsl"`
+	Shell         string `json:"shell,omitempty"`
+}
+
 type payload struct {
-	InstallID string  `json:"install_id"`
-	Version   string  `json:"version"`
-	OS        string  `json:"os"`
-	Arch      string  `json:"arch"`
-	Events    []Event `json:"events"`
+	InstallID string `json:"install_id"`
+	Version   string `json:"version"`
+	OS        string `json:"os"`
+	Arch      string `json:"arch"`
+	Platform
+	Events []Event `json:"events"`
 }
 
 type Client struct {
 	Dir, Endpoint, Version, OS, Arch string
 	Now                              func() time.Time
+	Describe                         func(context.Context) Platform
 }
 
 // Record appends an event to the queue. It never fails loudly: usage data is not worth an error.
@@ -152,13 +162,16 @@ func (c *Client) Flush(ctx context.Context) error {
 			p.Events = append(p.Events, e)
 		}
 	}
+	if len(p.Events) > 0 && c.Describe != nil {
+		p.Platform = c.Describe(ctx)
+	}
 	if len(p.Events) == 0 {
 		os.Remove(sending)
 		c.stamp("ok")
 		return nil
 	}
 	body, _ := json.Marshal(p)
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.Endpoint, bytes.NewReader(body))
 	if err != nil {

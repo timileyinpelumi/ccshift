@@ -18,7 +18,7 @@ func newTelemetry(enabled bool, getenv func(string) string, stateDir string) *te
 	if !enabled || getenv("DO_NOT_TRACK") != "" || getenv("CCSHIFT_NO_TELEMETRY") != "" || getenv("CI") != "" {
 		return nil
 	}
-	return &telemetry.Client{Dir: stateDir, Endpoint: telemetry.Endpoint, Version: version, OS: runtime.GOOS, Arch: runtime.GOARCH, Now: time.Now}
+	return &telemetry.Client{Dir: stateDir, Endpoint: telemetry.Endpoint, Version: version, OS: runtime.GOOS, Arch: runtime.GOARCH, Now: time.Now, Describe: describePlatform}
 }
 
 // track records one finished command and starts the background sender when a send is due.
