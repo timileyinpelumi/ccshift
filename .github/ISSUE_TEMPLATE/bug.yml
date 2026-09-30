@@ -1,0 +1,31 @@
+name: Bug
+description: Something ccshift did wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you ran, what you expected, what you got. Paste the output if you can.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: ccshift version
+      description: The output of ccshift version
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and terminal
+      placeholder: Ubuntu 24.04, kitty 0.39
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: ccshift doctor
+      description: The output of ccshift doctor
+      render: text

@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-export HOME=/home/dev
+export HOME=/home/dev CCSHIFT_NO_TELEMETRY=1
 mkdir -p /home/dev
 mkdir -p /demo/agents /demo/names /home/dev/.config/ccshift
 cp /rec/ccshift /usr/local/bin/ccshift

@@ -31,6 +31,7 @@ type Config struct {
 	SupportNote             bool                `toml:"support_note"`
 	AutoUpdate              bool                `toml:"auto_update"`
 	AutoHandoff             bool                `toml:"auto_handoff"`
+	Telemetry               bool                `toml:"telemetry"`
 }
 
 // NameRules says what counts as a ticket id inside a branch name, in any letter case.
@@ -48,7 +49,7 @@ func (c Config) NameRules() names.Rules {
 func Default() Config {
 	return Config{
 		HistoryKeep: 20, WarnThresholds: []int{70, 85}, AutosaveDebounceSeconds: 30, StaleDays: 14,
-		TicketPattern: `\b([A-Z][A-Z0-9]{1,5})[-_](\d{2,})\b`, SyncTabTitles: true, BriefModel: "sonnet", SupportNote: true, AutoUpdate: true,
+		TicketPattern: `\b([A-Z][A-Z0-9]{1,5})[-_](\d{2,})\b`, SyncTabTitles: true, BriefModel: "sonnet", SupportNote: true, AutoUpdate: true, Telemetry: true,
 		// Words that come before a number in branch names without being ticket prefixes.
 		TicketIgnore: strings.Fields("fix bug feat hotfix issue pr mr rc ver node react vue sha md utf http tls ssl es py go java php ruby rails net ios step part phase test day week"),
 	}

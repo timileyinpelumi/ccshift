@@ -34,6 +34,8 @@ Website: https://www.timileyin.dev/ccshift
 - [Update](#update)
 - [Uninstall](#uninstall)
 - [Development](#development)
+- [Feedback](#feedback)
+- [Telemetry](#telemetry)
 - [Support](#support)
 
 ## Install
@@ -211,6 +213,7 @@ Sessions outside these paths go into `default`. `ccshift ws` lists workspaces.
 | `ccshift update [--check]` | Install the latest version |
 | `ccshift uninstall [--keep-data]` | Remove ccshift and everything it added |
 | `ccshift doctor` | Check the setup |
+| `ccshift feedback` | Open the feedback form |
 | `ccshift version` | Print the version |
 
 A `<target>` is a number from `ccshift ls`, a session's three letter code from `ccshift ls` (such as `KTR`, in any case), a name, the start of a name, the start of a session id, or `.` for the session the command is run from. A session keeps its code across restarts. Most commands take `--terminal <name>` to override terminal detection.
@@ -257,6 +260,7 @@ brief_model = "sonnet"            # model that writes handoff briefs
 support_note = true               # an occasional line asking for support
 auto_update = true                # install new releases automatically
 auto_handoff = false              # hand off by itself at the last warning threshold
+telemetry = true                  # send anonymous usage data
 ticket_pattern = "\\b([A-Z][A-Z0-9]{1,5})[-_](\\d{2,})\\b"   # prefix and number of a ticket id
 ticket_ignore = ["fix", "node", "react"]                     # prefixes that are not tickets
 
@@ -311,6 +315,14 @@ scripts/e2e.sh ./ccshift                   # end to end against a real tmux
 ```
 
 CI runs the tests on Linux, macOS and Windows. Pushing a `v*` tag builds and publishes a release.
+
+## Feedback
+
+`ccshift feedback` opens a short form. Bugs go to [GitHub issues](https://github.com/timileyinpelumi/ccshift/issues).
+
+## Telemetry
+
+ccshift sends anonymous usage data once a day: a random install id, the version, operating system, architecture and terminal, and for each command its name, whether it worked, how long it took, a count (such as sessions restored) and, on failure, the error message with paths, names, quoted text and numbers removed. It never sends paths, session names, repository or branch names, or anything from your sessions. Turn it off with `telemetry = false` in the config, or `DO_NOT_TRACK=1` or `CCSHIFT_NO_TELEMETRY=1` in the environment.
 
 ## Support
 

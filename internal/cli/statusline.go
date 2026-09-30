@@ -10,6 +10,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/claude"
 	"github.com/timileyinpelumi/ccshift/internal/layout"
 	"github.com/timileyinpelumi/ccshift/internal/target"
+	"github.com/timileyinpelumi/ccshift/internal/telemetry"
 )
 
 const (
@@ -138,6 +139,7 @@ func (a *App) recordContext(id, name string, pct float64, size int, source strin
 		return err
 	}
 	if len(fresh) > 0 {
+		a.record(telemetry.Event{Command: "warn", N: fresh[len(fresh)-1]})
 		label := name
 		if label == "" {
 			label, _ = a.savedName(id)

@@ -9,6 +9,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/layout"
 	"github.com/timileyinpelumi/ccshift/internal/names"
 	"github.com/timileyinpelumi/ccshift/internal/store"
+	"github.com/timileyinpelumi/ccshift/internal/telemetry"
 )
 
 const (
@@ -67,6 +68,12 @@ func (a *App) cmdHook(ctx context.Context, args []string) (err error) {
 		if err := a.clearEnded(in.SessionID); err != nil {
 			a.Store.Log("hook session-start: %v", err)
 		}
+		used := agent
+		if used == "" {
+			used = "claude"
+		}
+		a.record(telemetry.Event{Command: "session", Agent: used})
+		a.sendLater()
 		return a.autosave(ctx)
 	case "stop":
 		if a.Now().Sub(a.Store.LastAutosave()) >= time.Duration(a.Config.AutosaveDebounceSeconds)*time.Second {

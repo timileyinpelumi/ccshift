@@ -91,6 +91,7 @@ main() {
 	mkdir -p "$dir"
 	install -m 0755 "$tmp/ccshift" "$dir/ccshift"
 	done_ "ccshift $("$dir/ccshift" version)"
+	"$dir/ccshift" telemetry install --method script >/dev/null 2>&1 &
 
 	case ":$PATH:" in
 		*":$dir:"*) on_path=yes ;;

@@ -50,6 +50,7 @@ func (a *App) cmdFind(ctx context.Context, args []string) error {
 	if len(matches) > *limit {
 		matches = matches[:*limit]
 	}
+	a.tally = len(matches)
 	if len(matches) == 0 {
 		fmt.Fprintf(a.Out, "No past session mentions %q.\n", strings.Join(words, " "))
 		return nil

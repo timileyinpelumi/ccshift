@@ -101,6 +101,7 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 			failed++
 			continue
 		}
+		a.tally += len(plan.Launches)
 		if u.Color {
 			u.OK("Opened %d tabs in %s", len(plan.Launches), ad.Name())
 		}

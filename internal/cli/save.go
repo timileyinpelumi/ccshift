@@ -145,6 +145,7 @@ func (a *App) cmdSave(ctx context.Context, args []string) error {
 		if err := a.Store.SetOrder(ws, ids); err != nil {
 			return err
 		}
+		a.tally += len(items)
 		u.OK("%s: saved %d sessions", u.Paint(ui.Bold, ws), len(items))
 		for _, e := range snap.Sessions {
 			a.listItem(u, e.Position, layout.Title(e), e.CWD)

@@ -78,6 +78,7 @@ function Install-Ccshift {
         Copy-Item (Join-Path $tmp 'ccshift.exe') (Join-Path $dir 'ccshift.exe') -Force
         $version = & (Join-Path $dir 'ccshift.exe') version
         Done "ccshift $version"
+        Start-Process -FilePath (Join-Path $dir 'ccshift.exe') -ArgumentList 'telemetry', 'install', '--method', 'script' -WindowStyle Hidden -ErrorAction SilentlyContinue
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
     }

@@ -18,6 +18,7 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/names"
 	"github.com/timileyinpelumi/ccshift/internal/proc"
 	"github.com/timileyinpelumi/ccshift/internal/store"
+	"github.com/timileyinpelumi/ccshift/internal/telemetry"
 	"github.com/timileyinpelumi/ccshift/internal/term"
 	"github.com/timileyinpelumi/ccshift/internal/ui"
 	"github.com/timileyinpelumi/ccshift/internal/update"
@@ -61,8 +62,11 @@ type App struct {
 	Chdir        func(dir string) error
 	Detach       func(argv []string) error
 	Executable   string
+	Telemetry    *telemetry.Client // nil when usage data is off
+	tally        int               // a count the running command reports, such as sessions restored
 	HasCommand   func(name string) bool
 	NotifySend   func(args []string) (string, error)
+	OpenURL      func(string) error
 	Notify       func(title, body string, onClick []string) // onClick runs when the notification is clicked, where the desktop allows it
 	Shell        func(ctx context.Context, command string, stdin []byte) ([]byte, error)
 }
@@ -99,10 +103,11 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		NotifySend: notifySend, Notify: func(title, body string, onClick []string) { notify(exe, title, body, onClick) }, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), AgentHomes: defaultAgentHomes(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
+		NotifySend: notifySend, OpenURL: openURL, Notify: func(title, body string, onClick []string) { notify(exe, title, body, onClick) }, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), AgentHomes: defaultAgentHomes(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
 		Releases: update.Releases{Base: update.DefaultBase, OS: runtime.GOOS, Arch: runtime.GOARCH}, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}
+	app.Telemetry = newTelemetry(cfg.Telemetry, os.Getenv, st.Dir)
 	app.RunClaude = func(ctx context.Context, cwd string, args []string, stdin string) (string, error) {
 		cmd := exec.CommandContext(ctx, app.ClaudeBin, args...)
 		cmd.Dir = cwd
@@ -145,6 +150,8 @@ func (a *App) commands() []command {
 		{"hook", "called by Claude Code hooks", (*App).cmdHook},
 		{"statusline", "called by Claude Code as the status line command", (*App).cmdStatusline},
 		{"notify", "shows a notification and runs a command when it is clicked", (*App).cmdNotify},
+		{"telemetry", "sends queued usage data", (*App).cmdTelemetry},
+		{"feedback", "tell us what works and what doesn't", (*App).cmdFeedback},
 		{"version", "print the version", func(a *App, _ context.Context, _ []string) error {
 			fmt.Fprintln(a.Out, version)
 			return nil
@@ -154,7 +161,7 @@ func (a *App) commands() []command {
 
 // quiet commands never trigger an automatic update: they are run by Claude Code, change the
 // binary themselves, or print output meant for another program.
-var quiet = map[string]bool{"hook": true, "statusline": true, "notify": true, "exec": true, "update": true, "uninstall": true, "version": true}
+var quiet = map[string]bool{"hook": true, "statusline": true, "notify": true, "telemetry": true, "exec": true, "update": true, "uninstall": true, "version": true}
 
 type command struct {
 	name    string
@@ -179,7 +186,11 @@ func (a *App) Run(ctx context.Context, args []string) int {
 		if c.name != args[0] {
 			continue
 		}
+		start := time.Now()
 		err := c.run(a, ctx, args[1:])
+		if !quiet[c.name] && c.name != "telemetry" {
+			a.track(c.name, err, start)
+		}
 		if err == nil {
 			if !quiet[c.name] && !slices.Contains(args, "--json") {
 				a.autoUpdate(ctx)
@@ -205,7 +216,7 @@ func (a *App) usage(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, u.Paint(ui.Bold, "commands:"))
 	for _, c := range a.commands() {
-		if c.name == "notify" {
+		if c.name == "notify" || c.name == "telemetry" {
 			continue
 		}
 		fmt.Fprintf(w, "  %s %s\n", u.Paint(ui.Cyan, fmt.Sprintf("%-11s", c.name)), c.summary)

@@ -6,6 +6,7 @@ bin=$(cd "$(dirname "$1")" && pwd -P)/$(basename "$1")
 work=$(cd "$(mktemp -d)" && pwd -P)
 export HOME=$work/home XDG_STATE_HOME=$work/state XDG_CONFIG_HOME=$work/config CLAUDE_CONFIG_DIR=$work/claude TMUX_TMPDIR=$work/tmux
 unset TMUX TMUX_PANE
+export CCSHIFT_NO_TELEMETRY=1
 mkdir -p "$HOME" "$work/bin" "$work/one" "$work/two dir" "$CLAUDE_CONFIG_DIR/projects/p" "$TMUX_TMPDIR" "$XDG_STATE_HOME/ccshift/workspaces/default"
 trap 'tmux kill-server 2>/dev/null || true; rm -rf "$work"' EXIT
 fail() { echo "FAIL: $*" >&2; exit 1; }
