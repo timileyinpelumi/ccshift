@@ -25,3 +25,20 @@ jobs:
         run: test -z "$(gofmt -l .)"
       - run: go vet ./...
       - run: go test ./...
+      - if: runner.os != 'Windows'
+        run: go build -o ccshift ./cmd/ccshift && scripts/e2e.sh ./ccshift
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          go build -o ccshift.exe ./cmd/ccshift
+          ./ccshift.exe version
+          ./ccshift.exe ls
+          ./ccshift.exe ws
+          ./ccshift.exe exec -- cmd /c echo isolated
+          $env:CLAUDE_CONFIG_DIR = Join-Path $env:TEMP 'cc'
+          New-Item -ItemType Directory -Path $env:CLAUDE_CONFIG_DIR | Out-Null
+          ./ccshift.exe init
+          Get-Content (Join-Path $env:CLAUDE_CONFIG_DIR 'settings.json')
+          '{"session_id":"x"}' | ./ccshift.exe hook session-start
+          '{"session_id":"x","session_name":"n","context_window":{"used_percentage":12}}' | ./ccshift.exe statusline
+          ./ccshift.exe init --remove
