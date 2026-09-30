@@ -19,7 +19,8 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
-const version = "0.1.0-dev"
+// version is set at release time with -ldflags.
+var version = "dev"
 
 type App struct {
 	Out io.Writer

@@ -1,0 +1,46 @@
+version: 2
+project_name: ccshift
+
+builds:
+  - main: ./cmd/ccshift
+    binary: ccshift
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/timileyinpelumi/ccshift/internal/cli.version={{ .Version }}
+
+# Asset names carry no version, so /releases/latest/download/<name> always works.
+archives:
+  - formats:
+      - tar.gz
+    name_template: "ccshift_{{ .Os }}_{{ .Arch }}"
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: checksums.txt
+
+nfpms:
+  - file_name_template: "ccshift_{{ .Arch }}"
+    maintainer: Timileyin Pelumi <hello@timileyin.dev>
+    homepage: https://www.timileyin.dev/ccshift
+    description: Save, restore, name and hand off Claude Code sessions across Linux terminals.
+    license: MIT
+    section: utils
+    formats:
+      - deb
+      - rpm
+    bindir: /usr/bin
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"

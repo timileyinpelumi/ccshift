@@ -9,8 +9,34 @@ Linux only for now. Works with tmux, kitty, WezTerm and zellij (exact tab order)
 ## Install
 
 ```
-go install github.com/timileyinpelumi/ccshift/cmd/ccshift@latest
+curl -fsSL https://www.timileyin.dev/ccshift/install.sh | sh
 ```
+
+This downloads the latest release for your machine (x86_64 or arm64), checks it against the published checksum, and puts `ccshift` in `~/.local/bin`. Set `CCSHIFT_INSTALL_DIR` to install somewhere else.
+
+Debian and Ubuntu:
+
+```
+curl -fsSLO https://github.com/timileyinpelumi/ccshift/releases/latest/download/ccshift_amd64.deb
+sudo apt install ./ccshift_amd64.deb
+```
+
+Fedora and RHEL:
+
+```
+sudo dnf install https://github.com/timileyinpelumi/ccshift/releases/latest/download/ccshift_amd64.rpm
+```
+
+On arm64, replace `amd64` with `arm64`. With Go 1.25 or newer you can also run `go install github.com/timileyinpelumi/ccshift/cmd/ccshift@latest`.
+
+Then set it up and check it:
+
+```
+ccshift init
+ccshift doctor
+```
+
+To upgrade, run the install command again. If the binary moves to a different path, run `ccshift init` again so the hooks point at it.
 
 ## Use
 
