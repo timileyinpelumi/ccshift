@@ -78,3 +78,19 @@ SHA512: efed82f2958be2e2da4c661f72352c096246fe869f581caf255ddff9adfbb838bf17b5ef
 Homepage: https://www.timileyin.dev/ccshift
 Description: Save, restore, name and hand off Claude Code sessions across Linux terminals.
 
+Package: ccshift
+Architecture: arm64
+Version: 0.7.1
+Priority: optional
+Section: utils
+Maintainer: Timileyin Pelumi <hello@timileyin.dev>
+Installed-Size: 6784
+Filename: pool/main/c/ccshift/ccshift_0.7.1_arm64.deb
+Size: 2906844
+MD5sum: 98f18b705f08f3f6a8c5902874bf31f8
+SHA1: b46e852b0be88708f39c52ea8b10372583082798
+SHA256: 3ad552e9bde3eff2bd8beeddfd806ad9296e0809188353b6e22f6fe16e4f5a6e
+SHA512: 2e8d52dfce5c922469ab757263adffc510299244fb8d676179f7e7ba8f41840f3fb052fd83486a0eb4e0d1823ef7cdb03d400471c7ede3f15b3052a83f49568a
+Homepage: https://www.timileyin.dev/ccshift
+Description: Save, restore, name and hand off Claude Code sessions across Linux terminals.
+
