@@ -9,23 +9,15 @@
 
 Keep your Claude Code sessions across restarts.
 
-ccshift saves every Claude Code session you have open, in the order of their tabs, and restores them all with one command. It also gives sessions readable names, warns you when one is running out of context, and hands a full session over to a fresh one.
+ccshift saves every Claude Code session you have open, in the order of their tabs, and restores them all with one command. It also gives sessions readable names, finds old sessions by what was said in them, warns you when one is running out of context, and hands a full session over to a fresh one. Codex CLI and Gemini CLI sessions are saved and restored too.
 
 [![ci](https://github.com/timileyinpelumi/ccshift/actions/workflows/ci.yml/badge.svg)](https://github.com/timileyinpelumi/ccshift/actions/workflows/ci.yml)
 [![release](https://img.shields.io/github/v/release/timileyinpelumi/ccshift)](https://github.com/timileyinpelumi/ccshift/releases/latest)
 [![licence](https://img.shields.io/github/license/timileyinpelumi/ccshift)](LICENSE)
 
-```
-$ ccshift ls
-#  NAME                   STATUS   CTX   TAB
-1  api · PAY-2193         idle     41%   kitty:1.1
-2  web · checkout-v2      busy     72%!  kitty:1.2
-3  docs · Install guide   waiting  18%   kitty:1.3
-
-# after a restart
-$ ccshift restore
-work: opening 3 sessions in kitty
-```
+<p align="center">
+  <img src="assets/demo.gif" alt="ccshift lists three sessions, saves them, restores them after the tabs close, searches past sessions and jumps to one from the picker" width="800">
+</p>
 
 Website: https://www.timileyin.dev/ccshift
 
@@ -99,6 +91,22 @@ ccshift restore
 
 ## Features
 
+### Picker
+
+Run `ccshift` on its own to get a list of your running and saved sessions. Type to filter, use the arrow keys to move, Enter to switch to a running session or resume a saved one, Ctrl+X to hand it off, Esc to quit.
+
+### Search
+
+Find a past session by what was said in it, and resume it:
+
+```sh
+ccshift find refund webhook      # every session that mentions both words, newest first
+ccshift find refund --here       # only sessions from this directory
+ccshift find refund --resume 1   # resume the first match without asking
+```
+
+It searches the transcripts Claude Code keeps under `~/.claude/projects`. A session that is still running is switched to instead of opened twice.
+
 ### Restore
 
 `ccshift restore` reopens every saved session in its own tab, in the saved order, each resumed with `claude --resume`. Sessions that are already running are skipped, so running it twice is safe.
@@ -165,6 +173,12 @@ Inside Claude, `!ccshift handoff` hands off the session you are in.
 
 ccshift reads the session's transcript, has a fresh Claude write a brief (goal, constraints and decisions, what is done, current state, next steps, open questions, gotchas), and opens a new session named `api (2)` that reads the brief and carries on, using the same model as the old session. The brief writer can read the repository but cannot change anything. The new session takes the old one's place in the saved layout.
 
+To have this happen by itself, set `auto_handoff = true`. When a session passes the last warning threshold (85% by default), ccshift writes the brief in the background and opens the new session in a new tab. The old session stays open.
+
+### Codex CLI and Gemini CLI
+
+If `~/.codex` or `~/.gemini` exists, `ccshift init` adds the same hooks to Codex CLI (`~/.codex/hooks.json`) and Gemini CLI (`~/.gemini/settings.json`). Their sessions show up in `ccshift ls`, are saved with the rest of the layout, and are restored with `codex resume <id>` or `gemini --resume <id>`. Handoff, names and the context warning are for Claude Code sessions only. Codex reports every exit the same way, so an exited Codex session stays in the save until you `ccshift forget` it or it goes stale.
+
 ### Workspaces
 
 Group sessions by directory. Each workspace is saved separately and restored into its own window.
@@ -181,6 +195,8 @@ Sessions outside these paths go into `default`. `ccshift ws` lists workspaces.
 
 | Command | What it does |
 |---|---|
+| `ccshift` | Open the picker |
+| `ccshift find <words> [--here] [--resume N]` | Search past sessions and resume one |
 | `ccshift ls [--all] [--json]` | List running sessions in tab order, with status and context used |
 | `ccshift save [workspace] [--edit] [--force]` | Save the layout now |
 | `ccshift restore [workspace] [--pick] [--dry-run]` | Reopen saved sessions |
@@ -239,6 +255,7 @@ sync_tab_titles = true            # keep tab titles in step with session names
 brief_model = "sonnet"            # model that writes handoff briefs
 support_note = true               # an occasional line asking for support
 auto_update = true                # install new releases automatically
+auto_handoff = false              # hand off by itself at the last warning threshold
 ticket_pattern = "\\b([A-Z][A-Z0-9]{1,5})[-_](\\d{2,})\\b"   # prefix and number of a ticket id
 ticket_ignore = ["fix", "node", "react"]                     # prefixes that are not tickets
 
@@ -248,7 +265,7 @@ work = ["~/dev/work"]
 
 ## How it works
 
-ccshift is a single binary with no daemon. `ccshift init` adds three hooks to Claude Code's `settings.json` (`SessionStart`, `Stop`, `SessionEnd`) and wraps your statusline command. The hooks call `ccshift hook …`, which saves the layout and records which tab each session is in. The statusline wrapper records context usage and then runs your own statusline.
+ccshift is a single binary with no daemon. `ccshift init` adds three hooks to Claude Code's `settings.json` (`SessionStart`, `Stop`, `SessionEnd`) and wraps your statusline command. The hooks call `ccshift hook …`, which saves the layout and records which tab each session is in. The statusline wrapper records context usage and then runs your own statusline. For Codex CLI and Gemini CLI, `init` adds the same three hooks to their own config files.
 
 - Hooks always exit 0, run under a two second budget and log failures to a file. They cannot break a Claude session.
 - State lives in `~/.local/state/ccshift` (`%LocalAppData%\ccshift\state` on Windows): saved layouts and their history, session names, context usage, handoff briefs and a log.

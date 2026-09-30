@@ -1,0 +1,27 @@
+#!/bin/bash
+# Stand-in for claude in the demo: lists the running stand-ins and shows a bare prompt.
+if [ "$1" = agents ]; then
+	shopt -s nullglob
+	f=(/demo/agents/*.json)
+	if [ ${#f[@]} -eq 0 ]; then echo '[]'; else printf '['; cat "${f[@]}" | paste -sd, -; printf ']'; fi
+	exit 0
+fi
+id= name= resumed=
+while [ $# -gt 0 ]; do
+	case "$1" in
+		--resume) id=$2; resumed=1; shift ;;
+		--session-id) id=$2; shift ;;
+		--name=*) name=${1#--name=} ;;
+	esac
+	shift
+done
+[ -n "$name" ] || name=$(cat "/demo/names/$id" 2>/dev/null)
+printf '{"pid":%d,"cwd":"%s","kind":"interactive","startedAt":%s,"sessionId":"%s","name":"%s","status":"idle"}\n' $$ "$PWD" "$(date +%s%3N)" "$id" "$name" >/demo/agents/$$.json
+trap 'rm -f /demo/agents/$$.json' EXIT HUP TERM
+clear
+printf '\n \033[38;5;173m✻\033[0m \033[1mClaude Code\033[0m\n\n'
+printf '   \033[2m%s\033[0m\n' "${PWD/#$HOME/\~}"
+[ -n "$resumed" ] && printf '   \033[2mResumed %s\033[0m\n' "$name"
+printf '\n \033[2m>\033[0m '
+sleep infinity &
+wait
