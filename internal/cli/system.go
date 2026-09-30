@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -105,11 +106,34 @@ func notify(title, body string) {
 		if err != nil {
 			return
 		}
-		cmd = exec.Command(path, "--app-name=ccshift", title, body)
+		args := []string{"--app-name=ccshift", title, body}
+		if icon := notifyIcon(); icon != "" {
+			args = append([]string{"--icon=" + icon}, args...)
+		}
+		cmd = exec.Command(path, args...)
 	}
 	if cmd.Start() == nil {
 		go cmd.Wait()
 	}
+}
+
+//go:embed icon.png
+var iconPNG []byte
+
+// notifyIcon writes the logo to the cache directory once, since notify-send takes an icon by path.
+func notifyIcon() string {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return ""
+	}
+	path := filepath.Join(dir, "ccshift", "icon.png")
+	if fi, err := os.Stat(path); err == nil && fi.Size() == int64(len(iconPNG)) {
+		return path
+	}
+	if os.MkdirAll(filepath.Dir(path), 0o700) != nil || os.WriteFile(path, iconPNG, 0o644) != nil {
+		return ""
+	}
+	return path
 }
 
 // toastScript takes the title and body as arguments so neither is parsed as PowerShell.
