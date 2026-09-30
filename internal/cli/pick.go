@@ -33,7 +33,7 @@ const (
 )
 
 type pickItem struct {
-	id, name, cwd, detail string
+	id, name, cwd, agent, detail string
 }
 
 // pickModel is the picker's state: the list, what has been typed, and which line is selected.
@@ -141,7 +141,7 @@ func (a *App) pickItems(v *view) []pickItem {
 		if e, ok := usage[it.Session.ID]; ok {
 			detail += " · " + contextCell(e, true, a.Config.WarnThresholds)
 		}
-		items = append(items, pickItem{id: it.Session.ID, name: it.Session.Name, cwd: it.Session.CWD, detail: detail})
+		items = append(items, pickItem{id: it.Session.ID, name: it.Session.Name, cwd: it.Session.CWD, agent: it.Session.Agent, detail: detail})
 	}
 	wss, _ := a.Store.Workspaces()
 	for _, ws := range wss {
@@ -152,7 +152,7 @@ func (a *App) pickItems(v *view) []pickItem {
 		for _, e := range snap.Sessions {
 			if !running[e.SessionID] {
 				running[e.SessionID] = true
-				items = append(items, pickItem{id: e.SessionID, name: layout.Title(e), cwd: e.CWD, detail: "saved · " + ws})
+				items = append(items, pickItem{id: e.SessionID, name: layout.Title(e), cwd: e.CWD, agent: e.Agent, detail: "saved · " + ws})
 			}
 		}
 	}
@@ -199,7 +199,7 @@ func (a *App) cmdPick(ctx context.Context, _ []string) error {
 	restore()
 	switch action {
 	case pickOpen:
-		return a.resumeSession(ctx, chosen.id, chosen.cwd)
+		return a.resumeSession(ctx, chosen.id, chosen.cwd, chosen.agent)
 	case pickHandoff:
 		return a.cmdHandoff(ctx, []string{chosen.id})
 	}

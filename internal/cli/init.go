@@ -28,7 +28,7 @@ var hookEvents = []struct{ event, arg string }{
 }
 
 // Matches a command ccshift installed, whatever path the binary had at the time.
-var ours = regexp.MustCompile(`ccshift(\.exe)?['"]? (hook (session-start|stop|session-end)|statusline)$`)
+var ours = regexp.MustCompile(`ccshift(\.exe)?['"]? (hook (session-start|stop|session-end)( --agent [a-z]+)?|statusline)$`)
 
 // ours reports whether ccshift installed a command: by shape, or exactly what it would install now
 // (which also covers a binary that is not named ccshift).
@@ -129,8 +129,8 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 		}
 		after, _ := f.Bytes()
 		if bytes.Equal(before, after) {
-			fmt.Fprintln(a.Out, "Nothing to remove.")
-			return nil
+			fmt.Fprintln(a.Out, "Nothing to remove from Claude Code.")
+			return a.setupAgents(true)
 		}
 		if err := f.Save(); err != nil {
 			return err
@@ -139,7 +139,7 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 			return err
 		}
 		fmt.Fprintf(a.Out, "Removed ccshift's hooks and statusline from %s.\n", f.Path)
-		return nil
+		return a.setupAgents(true)
 	}
 
 	if _, err := f.RemoveHooks(a.ours); err != nil {
@@ -190,6 +190,9 @@ func (a *App) cmdInit(ctx context.Context, args []string) error {
 		fmt.Fprintf(a.Out, "The previous file is at %s.ccshift-bak. New Claude sessions pick this up; running ones need a restart.\n", f.Path)
 	}
 
+	if err := a.setupAgents(false); err != nil {
+		return err
+	}
 	ad, err := a.adapter("")
 	if err != nil {
 		return err

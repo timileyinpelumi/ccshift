@@ -27,13 +27,13 @@ func PlanRestore(snap store.Snapshot, running map[string]bool, transcriptExists 
 		switch {
 		case running[e.SessionID]:
 			p.Skipped = append(p.Skipped, Skip{e, "already running"})
-		case !transcriptExists(e.SessionID):
+		case e.Agent == "" && !transcriptExists(e.SessionID):
 			p.Skipped = append(p.Skipped, Skip{e, "transcript not found"})
 		case !dirExists(e.CWD):
 			p.Skipped = append(p.Skipped, Skip{e, "directory no longer exists: " + e.CWD})
 		default:
-			argv := []string{claudeBin, "--resume", e.SessionID}
-			if e.Name != "" && !claude.IsDefaultName(e.Name, e.CWD) {
+			argv := ResumeArgv(e.Agent, claudeBin, e.SessionID)
+			if e.Agent == "" && e.Name != "" && !claude.IsDefaultName(e.Name, e.CWD) {
 				// The = form keeps a name that starts with "-" from being read as a flag.
 				argv = append(argv, "--name="+e.Name)
 			}
@@ -42,4 +42,15 @@ func PlanRestore(snap store.Snapshot, running map[string]bool, transcriptExists 
 		}
 	}
 	return p
+}
+
+// ResumeArgv is the command that resumes a session of the given agent in its own directory.
+func ResumeArgv(agent, claudeBin, id string) []string {
+	switch agent {
+	case "codex":
+		return []string{"codex", "resume", id}
+	case "gemini":
+		return []string{"gemini", "--resume", id}
+	}
+	return []string{claudeBin, "--resume", id}
 }

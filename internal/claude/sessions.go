@@ -25,6 +25,7 @@ type Session struct {
 	Name      string
 	Status    string
 	StartedAt time.Time
+	Agent     string // "" for Claude Code, else "codex" or "gemini"
 }
 
 type Runner func(ctx context.Context, name string, args ...string) ([]byte, error)

@@ -54,6 +54,7 @@ type App struct {
 	Editor       func(path string) error
 	ClaudeDir    string
 	ConfigPath   string
+	AgentHomes   map[string]string
 	Releases     releases
 	Interactive  func() bool
 	Chdir        func(dir string) error
@@ -96,7 +97,7 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
+		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), AgentHomes: defaultAgentHomes(), Interactive: stdoutIsTerminal, Chdir: os.Chdir, Detach: term.Start,
 		Releases: update.Releases{Base: update.DefaultBase, OS: runtime.GOOS, Arch: runtime.GOARCH}, Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}

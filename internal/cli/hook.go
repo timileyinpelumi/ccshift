@@ -42,10 +42,19 @@ func (a *App) cmdHook(ctx context.Context, args []string) (err error) {
 	stderr := a.Err
 	a.Err = logWriter{a.Store}
 	defer func() { a.Err = stderr }()
+	agent := ""
+	if len(args) == 3 && args[1] == "--agent" {
+		agent, args = args[2], args[:1]
+	}
 	if len(args) != 1 {
 		return fmt.Errorf("expected one event name")
 	}
 	in := claude.ParseHookInput(readInput(a.In))
+	if agent != "" && args[0] != "session-end" {
+		if err := a.registerAgent(agent, in); err != nil {
+			a.Store.Log("hook %s --agent %s: %v", args[0], agent, err)
+		}
+	}
 	a.hookSession = in.SessionID
 	if args[0] == "session-start" || args[0] == "stop" {
 		if err := a.recordSessionEnv(in.SessionID); err != nil {
@@ -65,7 +74,9 @@ func (a *App) cmdHook(ctx context.Context, args []string) (err error) {
 				a.Store.Log("hook stop: %v", err)
 			}
 		}
-		a.contextFromTranscript(in)
+		if agent == "" {
+			a.contextFromTranscript(in)
+		}
 		return nil
 	case "session-end":
 		return a.sessionEnded(in)

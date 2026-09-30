@@ -149,7 +149,7 @@ func Snapshot(ws string, items []Item, terminal string, now time.Time) store.Sna
 	s := store.Snapshot{Workspace: ws, SavedAt: now, Terminal: terminal, Sessions: []store.Entry{}}
 	for i, it := range items {
 		s.Sessions = append(s.Sessions, store.Entry{
-			SessionID: it.Session.ID, CWD: it.Session.CWD, Name: it.Session.Name, Generated: it.Generated, Position: i + 1, LastSeen: now.Unix(),
+			SessionID: it.Session.ID, CWD: it.Session.CWD, Name: it.Session.Name, Generated: it.Generated, Agent: it.Session.Agent, Position: i + 1, LastSeen: now.Unix(),
 		})
 	}
 	return s

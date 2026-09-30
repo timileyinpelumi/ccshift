@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/timileyinpelumi/ccshift/internal/claude"
+	"github.com/timileyinpelumi/ccshift/internal/layout"
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
@@ -75,7 +76,7 @@ func (a *App) cmdFind(ctx context.Context, args []string) error {
 		return usageError{fmt.Sprintf("there is no number %d in the list", pick)}
 	}
 	m := matches[pick-1]
-	return a.resumeSession(ctx, m.SessionID, m.CWD)
+	return a.resumeSession(ctx, m.SessionID, m.CWD, "")
 }
 
 func shortID(id string) string {
@@ -86,7 +87,7 @@ func shortID(id string) string {
 }
 
 // resumeSession switches to a session's tab when it is running, and otherwise resumes it here.
-func (a *App) resumeSession(ctx context.Context, id, cwd string) error {
+func (a *App) resumeSession(ctx context.Context, id, cwd, agent string) error {
 	v, err := a.view(ctx, "")
 	if err != nil {
 		return err
@@ -112,5 +113,5 @@ func (a *App) resumeSession(ctx context.Context, id, cwd string) error {
 			return err
 		}
 	}
-	return a.Exec([]string{a.ClaudeBin, "--resume", id})
+	return a.Exec(layout.ResumeArgv(agent, a.ClaudeBin, id))
 }

@@ -35,7 +35,7 @@ func (a *App) view(ctx context.Context, termName string) (*view, error) {
 	if err != nil {
 		return nil, err
 	}
-	live, err := a.Claude.Live(ctx)
+	live, err := a.liveSessions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("reading Claude sessions: %w", err)
 	}

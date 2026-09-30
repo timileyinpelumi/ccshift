@@ -17,6 +17,7 @@ type Entry struct {
 	Name      string `json:"name,omitempty"`
 	Position  int    `json:"position"`
 	Generated bool   `json:"generated_name,omitempty"`
+	Agent     string `json:"agent,omitempty"`
 	Exit      string `json:"exit,omitempty"`
 	LastSeen  int64  `json:"last_seen,omitempty"`
 }

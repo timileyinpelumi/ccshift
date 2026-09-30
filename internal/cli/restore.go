@@ -45,7 +45,7 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 	if err != nil {
 		return err
 	}
-	live, err := a.Claude.Live(ctx)
+	live, err := a.liveSessions(ctx)
 	if err != nil {
 		return fmt.Errorf("reading Claude sessions: %w", err)
 	}

@@ -27,7 +27,7 @@ func (a *App) cmdForget(ctx context.Context, args []string) error {
 	}
 	spec := pos[0]
 	// Asked before the lock is taken: it calls claude, and hooks wait on the lock.
-	live, err := a.Claude.Live(ctx)
+	live, err := a.liveSessions(ctx)
 	if err != nil {
 		return fmt.Errorf("reading Claude sessions: %w", err)
 	}

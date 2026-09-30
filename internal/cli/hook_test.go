@@ -10,10 +10,10 @@ import (
 	"github.com/timileyinpelumi/ccshift/internal/term"
 )
 
-func (h *harness) hook(t *testing.T, event, stdin string) {
+func (h *harness) hook(t *testing.T, event, stdin string, extra ...string) {
 	t.Helper()
 	h.app.In = strings.NewReader(stdin)
-	if code := h.run("hook", event); code != 0 {
+	if code := h.run(append([]string{"hook", event}, extra...)...); code != 0 {
 		t.Fatalf("hook %s exited %d: %s", event, code, h.err)
 	}
 }

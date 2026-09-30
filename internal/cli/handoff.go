@@ -28,6 +28,7 @@ const (
 // handoffSource is the session being handed off: a running one, or one that is only in a save.
 type handoffSource struct {
 	id, name, cwd, workspace string
+	agent                    string
 	live                     bool
 	tab                      term.TabID
 	matched                  bool
@@ -37,7 +38,7 @@ func (a *App) handoffSource(spec string, v *view) (handoffSource, error) {
 	it, err := target.Resolve(spec, v.order, a.AncestorPIDs(a.SelfPID))
 	if err == nil {
 		return handoffSource{
-			id: it.Session.ID, name: it.Session.Name, cwd: it.Session.CWD, workspace: it.Workspace,
+			id: it.Session.ID, name: it.Session.Name, cwd: it.Session.CWD, workspace: it.Workspace, agent: it.Session.Agent,
 			live: true, tab: it.Tab, matched: it.Matched,
 		}, nil
 	}
@@ -63,7 +64,7 @@ func (a *App) handoffSource(spec string, v *view) (handoffSource, error) {
 			}
 			if strings.EqualFold(e.Name, spec) || (len(spec) >= 4 && strings.HasPrefix(e.SessionID, spec)) {
 				if _, seen := found[e.SessionID]; !seen {
-					found[e.SessionID] = handoffSource{id: e.SessionID, name: layout.Title(e), cwd: e.CWD, workspace: ws}
+					found[e.SessionID] = handoffSource{id: e.SessionID, name: layout.Title(e), cwd: e.CWD, workspace: ws, agent: e.Agent}
 				}
 			}
 		}
@@ -118,6 +119,9 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	src, err := a.handoffSource(spec, v)
 	if err != nil {
 		return err
+	}
+	if src.agent != "" {
+		return fmt.Errorf("%s is a %s session; handoff works for Claude Code sessions only", src.name, src.agent)
 	}
 	a.Store.PruneOlder("handoffs", handoffKeep, a.Now())
 	briefPath := filepath.Join(a.Store.Dir, "handoffs", src.id+".md")

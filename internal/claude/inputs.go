@@ -8,6 +8,7 @@ type HookInput struct {
 	Reason         string `json:"reason"`
 	Source         string `json:"source"`
 	TranscriptPath string `json:"transcript_path"`
+	CWD            string `json:"cwd"`
 }
 
 func ParseHookInput(b []byte) HookInput {
@@ -20,7 +21,8 @@ func ParseHookInput(b []byte) HookInput {
 // Checked on Claude Code 2.1.285: /exit, Ctrl+D and Ctrl+C give prompt_input_exit;
 // SIGTERM and SIGHUP give other.
 func (in HookInput) UserExit() bool {
-	return in.Reason == "prompt_input_exit" || in.Reason == "clear" || in.Reason == "resume"
+	// Gemini CLI also reports "exit". Codex CLI always reports "other", so its exits look like crashes.
+	return in.Reason == "prompt_input_exit" || in.Reason == "clear" || in.Reason == "resume" || in.Reason == "exit"
 }
 
 // StatusInput is what Claude Code writes to the statusline command's stdin.
