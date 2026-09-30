@@ -109,7 +109,7 @@ func TestStopHookEstimatesContextFromTranscript(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "s1.jsonl")
 	os.WriteFile(p, []byte(`{"type":"assistant","message":{"usage":{"input_tokens":1000,"cache_read_input_tokens":149000}}}`+"\n"), 0o644)
 	h.sessions = twoSessions()
-	h.hook(t, "stop", `{"session_id":"s1","transcript_path":"`+p+`"}`)
+	h.hook(t, "stop", stopInput("s1", p))
 	c, _ := h.app.Store.Context()
 	// The window size is a guess here, so the estimate is recorded but does not notify.
 	if c["s1"].Percent != 75 || c["s1"].Source != "transcript" || len(notes) != 0 {
@@ -119,14 +119,20 @@ func TestStopHookEstimatesContextFromTranscript(t *testing.T) {
 		t.Fatalf("ls should mark an estimate:\n%s", out)
 	}
 	// A headless run (claude -p) is not a saved session and gets no entry.
-	h.hook(t, "stop", `{"session_id":"headless","transcript_path":"`+p+`"}`)
+	h.hook(t, "stop", stopInput("headless", p))
 	if c, _ = h.app.Store.Context(); len(c) != 1 {
 		t.Fatalf("context = %+v", c)
 	}
 	// A fresh statusline reading wins over the estimate.
 	h.status(t, statusJSON("s1", "one", 20))
-	h.hook(t, "stop", `{"session_id":"s1","transcript_path":"`+p+`"}`)
+	h.hook(t, "stop", stopInput("s1", p))
 	if c, _ = h.app.Store.Context(); c["s1"].Percent != 20 {
 		t.Fatalf("estimate overwrote the statusline reading: %+v", c["s1"])
 	}
+}
+
+// stopInput builds the hook's JSON with the path encoded, since Windows paths contain backslashes.
+func stopInput(id, transcript string) string {
+	b, _ := json.Marshal(map[string]string{"session_id": id, "transcript_path": transcript})
+	return string(b)
 }

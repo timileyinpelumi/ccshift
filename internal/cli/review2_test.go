@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -122,6 +123,9 @@ func TestInitKeepsThePristineBackup(t *testing.T) {
 }
 
 func TestInitFollowsASymlinkedSettingsFile(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("needs symlinks or a POSIX shell")
+	}
 	h, p := initApp(t, "")
 	real := filepath.Join(t.TempDir(), "dotfiles-settings.json")
 	os.WriteFile(real, []byte(userSettings), 0o600)
@@ -236,6 +240,9 @@ func TestPreviousStatuslineOutputIsShownEvenOnNonZeroExit(t *testing.T) {
 }
 
 func TestRunShellKillsBackgroundChildrenAtTheDeadline(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("needs symlinks or a POSIX shell")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 	defer cancel()
 	start := time.Now()

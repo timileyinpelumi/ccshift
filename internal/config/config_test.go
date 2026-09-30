@@ -8,6 +8,7 @@ import (
 
 func TestWorkspaceFor(t *testing.T) {
 	t.Setenv("HOME", "/home/u")
+	t.Setenv("USERPROFILE", "/home/u") // what Windows uses for the home directory
 	c := Config{Workspaces: map[string][]string{
 		"work":     {"~/dev/acme", "/srv/shopfront"},
 		"personal": {"~/dev/personal"},

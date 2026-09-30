@@ -136,7 +136,7 @@ func TestHandoffEditAndNoLaunch(t *testing.T) {
 		return os.WriteFile(path, []byte("edited brief\n"), 0o644)
 	}
 	out := h.must(t, "handoff", "1", "--edit", "--no-launch")
-	if !strings.HasSuffix(edited, "handoffs/s1.md") || len(h.term.opened) != 0 || !strings.Contains(out, edited) {
+	if !strings.HasSuffix(edited, filepath.Join("handoffs", "s1.md")) || len(h.term.opened) != 0 || !strings.Contains(out, edited) {
 		t.Fatalf("edited=%q opened=%v out=%q", edited, h.term.opened, out)
 	}
 	if got := latestIDs(t, h, "default"); got[0] != "s1" {
