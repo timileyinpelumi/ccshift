@@ -2,6 +2,8 @@
 
 Save the Claude Code sessions you have open in your terminal, in tab order, and bring them all back after a restart with one command.
 
+Site: https://www.timileyin.dev/ccshift
+
 Linux only for now. Works with tmux, kitty, WezTerm and zellij (exact tab order), and gnome-terminal, Ptyxis, Konsole, Tilix, xfce4-terminal, Ghostty, Alacritty and foot (tabs or windows are opened in the saved order, but the order can't be read back from the terminal).
 
 ## Install

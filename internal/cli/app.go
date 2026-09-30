@@ -171,6 +171,6 @@ func (a *App) usage(w io.Writer) {
 	fmt.Fprintln(w)
 	fmt.Fprintln(w, "commands:")
 	for _, c := range a.commands() {
-		fmt.Fprintf(w, "  %-10s %s\n", c.name, c.summary)
+		fmt.Fprintf(w, "  %-11s %s\n", c.name, c.summary)
 	}
 }
