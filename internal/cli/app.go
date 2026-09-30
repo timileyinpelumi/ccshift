@@ -50,6 +50,7 @@ type App struct {
 	Now          func() time.Time
 	Editor       func(path string) error
 	ClaudeDir    string
+	ConfigPath   string
 	Executable   string
 	HasCommand   func(name string) bool
 	Notify       func(title, body string)
@@ -88,7 +89,7 @@ func NewApp() (*App, error) {
 		Claude: claude.NewReader(), Store: st, Config: cfg, Terms: term.All(x), Env: x.Env,
 		SelfPID: os.Getpid(), EnvOf: proc.Environ, TTYOf: proc.TTY, AncestorPIDs: proc.Ancestors, Comms: comms,
 		Git: gitInfo, Exec: execReplace, GitSummary: gitSummary, NewID: newSessionID, Cwd: cwd, DirExists: dirExists, ClaudeBin: bin, Now: time.Now, Editor: runEditor,
-		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, Executable: exe,
+		Notify: notify, Shell: runShell, ClaudeDir: claudeDir, ConfigPath: config.DefaultPath(), Executable: exe,
 		HasCommand: func(name string) bool { _, err := exec.LookPath(name); return err == nil },
 	}
 	app.RunClaude = func(ctx context.Context, cwd string, args []string, stdin string) (string, error) {
@@ -125,6 +126,7 @@ func (a *App) commands() []command {
 		{"ws", "list workspaces", (*App).cmdWs},
 		{"init", "add autosave hooks and the statusline to Claude Code", (*App).cmdInit},
 		{"doctor", "check the setup", (*App).cmdDoctor},
+		{"uninstall", "remove ccshift, its hooks and its saved data", (*App).cmdUninstall},
 		{"exec", "run a command outside any Claude session (used by restore on Windows)", (*App).cmdExec},
 		{"hook", "called by Claude Code hooks", (*App).cmdHook},
 		{"statusline", "called by Claude Code as the status line command", (*App).cmdStatusline},

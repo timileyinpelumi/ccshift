@@ -217,6 +217,7 @@ func (a *App) cmdHandoff(ctx context.Context, args []string) error {
 	}
 
 	fmt.Fprintf(a.Out, "Handed %s off to %s. The brief is at %s.\n", src.name, newName, briefPath)
+	defer a.supportNote()
 	if !src.live {
 		return nil
 	}

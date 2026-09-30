@@ -4,6 +4,7 @@
 #
 # $env:CCSHIFT_INSTALL_DIR  where ccshift.exe goes (default: %LOCALAPPDATA%\Programs\ccshift)
 # $env:CCSHIFT_VERSION      a release tag such as v0.2.0 (default: the latest release)
+# $env:CCSHIFT_NO_SETUP     set to skip the question about running ccshift init
 $ErrorActionPreference = 'Stop'
 
 function Install-Ccshift {
@@ -12,36 +13,80 @@ function Install-Ccshift {
     $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'amd64' }
     $base = if ($env:CCSHIFT_VERSION) { "https://github.com/$repo/releases/download/$($env:CCSHIFT_VERSION)" } else { "https://github.com/$repo/releases/latest/download" }
     $asset = "ccshift_windows_$arch.zip"
+    $tick = [char]0x2713
+
+    function Step($text) { Write-Host '> ' -ForegroundColor Cyan -NoNewline; Write-Host $text -NoNewline }
+    function Done($text) { Write-Host "  $tick $text" -ForegroundColor Green }
+
+    Write-Host ''
+    Write-Host '                  __    _ ______' -ForegroundColor Yellow
+    Write-Host '  _______________/ /_  (_) __/ /_' -ForegroundColor Yellow
+    Write-Host ' / ___/ ___/ ___/ __ \/ / /_/ __/' -ForegroundColor Yellow
+    Write-Host '/ /__/ /__(__  ) / / / / __/ /_' -ForegroundColor Yellow
+    Write-Host '\___/\___/____/_/ /_/_/_/  \__/' -ForegroundColor Yellow
+    Write-Host ''
+    Write-Host 'Keep your Claude Code sessions across restarts.' -ForegroundColor DarkGray
+    Write-Host ''
+
+    Step 'Checking this machine'
+    Done "windows $arch"
 
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("ccshift-" + [Guid]::NewGuid())
     New-Item -ItemType Directory -Path $tmp | Out-Null
     try {
-        Write-Host "Downloading $asset"
+        Step "Downloading $asset"
+        $ProgressPreference = 'SilentlyContinue'
         Invoke-WebRequest -Uri "$base/$asset" -OutFile (Join-Path $tmp $asset) -UseBasicParsing
         Invoke-WebRequest -Uri "$base/checksums.txt" -OutFile (Join-Path $tmp 'checksums.txt') -UseBasicParsing
+        Done ('{0:N1} MB' -f ((Get-Item (Join-Path $tmp $asset)).Length / 1MB))
 
+        Step 'Checking the checksum'
         $line = Get-Content (Join-Path $tmp 'checksums.txt') | Where-Object { $_ -match "\s$([regex]::Escape($asset))$" }
         if (-not $line) { throw "checksums.txt has no entry for $asset" }
         $want = ($line -split '\s+')[0]
         $got = (Get-FileHash -Algorithm SHA256 (Join-Path $tmp $asset)).Hash.ToLower()
         if ($want -ne $got) { throw 'The download does not match its checksum. Nothing was installed.' }
+        Done 'sha256 matches'
 
+        Step "Installing to $dir"
         Expand-Archive -Path (Join-Path $tmp $asset) -DestinationPath $tmp -Force
         New-Item -ItemType Directory -Path $dir -Force | Out-Null
         Copy-Item (Join-Path $tmp 'ccshift.exe') (Join-Path $dir 'ccshift.exe') -Force
+        $version = & (Join-Path $dir 'ccshift.exe') version
+        Done "ccshift $version"
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
     }
 
-    $version = & (Join-Path $dir 'ccshift.exe') version
-    Write-Host "Installed ccshift $version to $dir"
-
     $path = [Environment]::GetEnvironmentVariable('Path', 'User')
     if (($path -split ';') -notcontains $dir) {
+        Step 'Adding it to your PATH'
         [Environment]::SetEnvironmentVariable('Path', "$path;$dir", 'User')
-        Write-Host "Added $dir to your PATH. Open a new terminal for it to take effect."
+        $env:Path = "$env:Path;$dir"
+        Done 'open a new terminal for other windows to see it'
     }
-    Write-Host 'Next: ccshift init'
+
+    Write-Host ''
+    Write-Host 'ccshift is installed.' -ForegroundColor Green
+
+    $setUp = $false
+    if (-not $env:CCSHIFT_NO_SETUP -and [Environment]::UserInteractive) {
+        Write-Host ''
+        $answer = Read-Host 'Turn on autosave now? It adds three hooks to Claude Code and backs up your settings. [Y/n]'
+        if ($answer -notmatch '^[nN]') {
+            Write-Host ''
+            & (Join-Path $dir 'ccshift.exe') init
+            $setUp = $LASTEXITCODE -eq 0
+        }
+    }
+
+    Write-Host ''
+    Write-Host 'Next'
+    if (-not $setUp) { Write-Host '  ccshift init       ' -ForegroundColor Cyan -NoNewline; Write-Host 'turn on autosave' }
+    Write-Host '  ccshift doctor     ' -ForegroundColor Cyan -NoNewline; Write-Host 'check the setup'
+    Write-Host '  ccshift restore    ' -ForegroundColor Cyan -NoNewline; Write-Host 'bring your sessions back after a restart'
+    Write-Host ''
+    Write-Host 'Docs: https://www.timileyin.dev/ccshift' -ForegroundColor DarkGray
 }
 
 Install-Ccshift

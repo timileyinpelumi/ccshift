@@ -116,6 +116,9 @@ func (a *App) cmdRestore(ctx context.Context, args []string) error {
 	if failed > 0 {
 		return fmt.Errorf("%d workspaces failed to open", failed)
 	}
+	if !*dryRun {
+		a.supportNote()
+	}
 	return nil
 }
 

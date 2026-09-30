@@ -68,7 +68,7 @@ sudo dnf install https://github.com/timileyinpelumi/ccshift/releases/latest/down
 go install github.com/timileyinpelumi/ccshift/cmd/ccshift@latest
 ```
 
-The install scripts pick the build for your machine (x86_64 or arm64), check it against the published checksum, and install to `~/.local/bin` on macOS and Linux or `%LOCALAPPDATA%\Programs\ccshift` on Windows. Set `CCSHIFT_INSTALL_DIR` to change the location and `CCSHIFT_VERSION` to pin a release. On arm64, use the `arm64` packages.
+The install scripts pick the build for your machine (x86_64 or arm64), check it against the published checksum, install to `~/.local/bin` on macOS and Linux or `%LOCALAPPDATA%\Programs\ccshift` on Windows, and offer to run `ccshift init` for you. Set `CCSHIFT_INSTALL_DIR` to change the location, `CCSHIFT_VERSION` to pin a release, and `CCSHIFT_NO_SETUP=1` to skip the setup question. On arm64, use the `arm64` packages.
 
 Requires [Claude Code](https://claude.com/claude-code).
 
@@ -181,6 +181,7 @@ Sessions outside these paths go into `default`. `ccshift ws` lists workspaces.
 | `ccshift forget <name>` | Remove a session from the save |
 | `ccshift ws` | List workspaces |
 | `ccshift init [--remove]` | Add or remove the hooks and statusline |
+| `ccshift uninstall [--keep-data]` | Remove ccshift and everything it added |
 | `ccshift doctor` | Check the setup |
 | `ccshift version` | Print the version |
 
@@ -225,6 +226,7 @@ stale_days = 14                   # drop a saved session that has not run for th
 history_keep = 20                 # manual saves kept per workspace
 sync_tab_titles = true            # keep tab titles in step with session names
 brief_model = "sonnet"            # model that writes handoff briefs
+support_note = true               # an occasional line asking for support
 ticket_pattern = "\\b([A-Z][A-Z0-9]{1,5})[-_](\\d{2,})\\b"   # prefix and number of a ticket id
 ticket_ignore = ["fix", "node", "react"]                     # prefixes that are not tickets
 
@@ -253,10 +255,11 @@ The design is written up in [docs/design](docs/design/2026-09-30-ccshift-design.
 ## Uninstall
 
 ```sh
-ccshift init --remove    # take the hooks and statusline out of settings.json
+ccshift uninstall              # hooks, saved data, settings and the program
+ccshift uninstall --keep-data  # keep saved layouts, names and settings
 ```
 
-Then delete the binary, and optionally the state and config directories listed above.
+It asks before removing anything; `--yes` skips the question. If ccshift came from a `.deb` or `.rpm`, remove the program with `sudo apt remove ccshift` or `sudo dnf remove ccshift` after running `ccshift uninstall`.
 
 ## Development
 
