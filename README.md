@@ -324,7 +324,7 @@ CI runs the tests on Linux, macOS and Windows. Pushing a `v*` tag builds and pub
 
 ## Telemetry
 
-ccshift sends anonymous usage data once a day: a random install id, the version, operating system, architecture and terminal, and for each command its name, whether it worked, how long it took, a count (such as sessions restored) and, on failure, the error message with paths, names, quoted text and numbers removed. It never sends paths, session names, repository or branch names, or anything from your sessions. Turn it off with `telemetry = false` in the config, or `DO_NOT_TRACK=1` or `CCSHIFT_NO_TELEMETRY=1` in the environment.
+ccshift sends anonymous usage data once a day: a random install id, the version, operating system, architecture and terminal, the approximate location (country and city) the server sees the request coming from, and for each command its name, whether it worked, how long it took, a count (such as sessions restored) and, on failure, the error message with paths, names, quoted text and numbers removed. It never sends paths, session names, repository or branch names, or anything from your sessions, and your IP address is not stored. Turn it off with `telemetry = false` in the config, or `DO_NOT_TRACK=1` or `CCSHIFT_NO_TELEMETRY=1` in the environment.
 
 ## Support
 
